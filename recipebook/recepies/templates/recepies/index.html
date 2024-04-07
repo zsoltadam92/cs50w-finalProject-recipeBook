@@ -1,0 +1,12 @@
+{% extends "recepies/layout.html" %} {% block body %}
+<h2 class="mb-4">Recepies</h2>
+
+<ul>
+  {% for recipe in recipes %}
+  <li>
+      <a href="#">{{ recipe.title }}</a>
+  </li>
+  {% endfor %}
+</ul>
+
+{% endblock %}
