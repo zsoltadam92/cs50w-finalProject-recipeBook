@@ -21,53 +21,59 @@
   <body>
  
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container-fluid">
-          <a class="navbar-brand" href="{% url 'index' %}">
-              <img src="{% static 'recepies/Colorful_book.webp' %}" alt="Logo">
-          </a>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-              <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarNav">
-              <ul class="navbar-nav">
-                  <li class="nav-item">
-                      <a class="nav-link" href="#">Receptek</a>
-                  </li>
-                  <li class="nav-item">
-                      <a class="nav-link" href="#">Keresés</a>
-                  </li>
-                  <li class="nav-item">
-                      <a class="nav-link" href="#">Kategóriák</a>
-                  </li>
-                  {% if user.is_authenticated %}
-                      <li class="nav-item">
-                          <a class="nav-link" href="{% url 'recipe_add' %}">Új recept hozzáadása</a>
-                      </li>
-                      <li class="nav-item">
-                          <a class="nav-link" href="{% url 'logout' %}">Kijelentkezés</a>
-                      </li>
-                  {% else %}
-                      <li class="nav-item">
-                          <a class="nav-link" href="{% url 'login' %}">Bejelentkezés</a>
-                      </li>
-                      <li class="nav-item">
-                          <a class="nav-link" href="{% url 'register' %}">Regisztráció</a>
-                      </li>
-                  {% endif %}
-              </ul>
-              {% if user.is_authenticated %}
-                  <span class="navbar-text">
-                      Üdvözlet, {{ user.username }}
-                  </span>
-              {% endif %}
-          </div>
-      </div>
-  </nav>
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'index' %}">
+                <img src="{% static 'recepies/Colorful_book.webp' %}" alt="Logo" style="height: 40px;">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Recipes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Search</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Categories</a>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'recipe_add' %}">Add New Recipe</a>
+                        </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav ml-auto"> 
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <span class="navbar-text">{{ user.username }}</span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
 
   <!-- Content -->
   <div class="container mt-3">
       {% block content %}
       {% endblock %}
   </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
   </body>
 </html>
