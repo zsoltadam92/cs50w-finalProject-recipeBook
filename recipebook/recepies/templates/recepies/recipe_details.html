@@ -1,0 +1,39 @@
+{% extends "recepies/layout.html" %} {% block content %}
+
+<div class="container mt-3">
+    <h1>{{ recipe.title }}</h1>
+    <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+    <p>Yields: {{ recipe.serving }} serving(s)</p>
+    <p>Preparation time: {{ recipe.preparation_time }} min</p>
+    <p>Difficulty: {{ recipe.difficulty }}</p>
+    <h3>Ingredients:</h3>
+    <ul>
+        {% for ingredient in recipe.get_ingredients_list %}
+        <li>
+          <input type="checkbox" class="ingredient-checkbox" onchange="toggleStrikethrough(this)">
+          <span class="ingredient-text">{{ ingredient }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    <h3>Preparation:</h3>
+      {% for preparation in recipe.get_preparation_section %}
+        <p>{{ preparation }}</p>
+      {% endfor %}
+  
+</div>
+
+<script>
+  const toggleClass = (element, className, condition) => {
+    condition ? element.classList.add(className) : element.classList.remove(className);
+};
+
+function toggleStrikethrough(checkbox) {
+    const textElement = checkbox.nextElementSibling;
+    toggleClass(textElement, 'strikethrough', checkbox.checked);
+}
+
+</script>
+
+
+
+{% endblock %}

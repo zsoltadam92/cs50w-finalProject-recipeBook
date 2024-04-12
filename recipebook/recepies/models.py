@@ -27,6 +27,9 @@ class Recipe(models.Model):
   def get_ingredients_list(self):
         return self.ingredients.split('\n') 
   
+  def get_preparation_section(self):
+        return self.preparation.split('\n') 
+  
   def get_absolute_url(self):
         return reverse('recipe_detail', kwargs={'pk': self.pk})
 

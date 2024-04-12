@@ -74,3 +74,8 @@ def recipe_add(request):
     else:
         form = RecipeForm()
     return render(request, 'recepies/recipe_form.html', {'form': form})
+
+def recipe_details(request, recipe_id):
+    recipe = Recipe.objects.get(pk=recipe_id)
+
+    return render(request, "recepies/recipe_details.html", {"recipe": recipe})
