@@ -1,0 +1,21 @@
+{% extends "recepies/layout.html" %}
+
+{% block content %}
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Új Recept</h5>
+                    <form action="{% url 'recipe_add' %}" method="post"  enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button type="submit" class="btn btn-primary">Recept Mentése</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+{% endblock %}

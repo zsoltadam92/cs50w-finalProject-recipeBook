@@ -1,5 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.urls import reverse
+
 
 # Create your models here.
 
@@ -18,8 +20,15 @@ class Recipe(models.Model):
     choices=DifficultyLevel.choices,
     default=DifficultyLevel.EASY
   )
-  ingredients = models.TextField()
+  ingredients = models.TextField(help_text="List ingredients separated by a newline.")
   preparation = models.TextField()
+  image = models.ImageField(upload_to='recepies/', null=True, blank=True) 
+
+  def get_ingredients_list(self):
+        return self.ingredients.split('\n') 
+  
+  def get_absolute_url(self):
+        return reverse('recipe_detail', kwargs={'pk': self.pk})
 
 class Comment(models.Model):
   user = models.ForeignKey(User, on_delete=models.CASCADE,related_name="user")

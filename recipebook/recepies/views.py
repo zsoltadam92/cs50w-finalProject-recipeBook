@@ -1,12 +1,13 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
 from .models import Recipe, Comment, Category
+from .forms import RecipeForm
 
 # Create your views here.
 
@@ -63,3 +64,13 @@ def logout_view(request):
 def index(request):
     recipes = Recipe.objects.all()
     return render(request, 'recepies/index.html', {'recipes': recipes})
+
+def recipe_add(request):
+    if request.method == 'POST':
+        form = RecipeForm(request.POST,request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('index')
+    else:
+        form = RecipeForm()
+    return render(request, 'recepies/recipe_form.html', {'form': form})
