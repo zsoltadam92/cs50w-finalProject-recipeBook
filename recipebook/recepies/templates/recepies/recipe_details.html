@@ -2,6 +2,11 @@
 
 <div class="container mt-3">
     <h1>{{ recipe.title }}</h1>
+    <div>
+      {% for category in recipe.categories.all %}
+          <span class="category-bubble">{{ category.title }}</span>
+      {% endfor %}
+  </div>
     <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
     <p>Yields: {{ recipe.serving }} serving(s)</p>
     <p>Preparation time: {{ recipe.preparation_time }} min</p>

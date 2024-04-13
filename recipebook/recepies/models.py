@@ -5,6 +5,12 @@ from django.urls import reverse
 
 # Create your models here.
 
+class Category(models.Model):
+  title = models.CharField(max_length=100)
+
+  def __str__(self):
+        return self.title
+
 # Difficulty levels for the dropdown menu
 class DifficultyLevel(models.TextChoices):
   EASY= 'Easy'
@@ -23,6 +29,7 @@ class Recipe(models.Model):
   ingredients = models.TextField(help_text="List ingredients separated by a newline.")
   preparation = models.TextField()
   image = models.ImageField(upload_to='recepies/', null=True, blank=True) 
+  categories = models.ManyToManyField(Category, related_name='recipes')
 
   def get_ingredients_list(self):
         return self.ingredients.split('\n') 
@@ -39,5 +46,3 @@ class Comment(models.Model):
   content = models.TextField()
   created_at = models.DateTimeField(auto_now_add=True)
 
-class Category(models.Model):
-  title = models.CharField(max_length=100)

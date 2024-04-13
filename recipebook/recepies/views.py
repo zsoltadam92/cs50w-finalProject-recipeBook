@@ -61,9 +61,12 @@ def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("index"))
 
+
+
 def index(request):
+    categories = Category.objects.all()
     recipes = Recipe.objects.all()
-    return render(request, 'recepies/index.html', {'recipes': recipes})
+    return render(request, 'recepies/index.html', {'recipes': recipes, 'categories': categories})
 
 def recipe_add(request):
     if request.method == 'POST':

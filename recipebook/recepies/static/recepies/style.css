@@ -28,3 +28,32 @@
   .strikethrough {
     text-decoration: line-through;
 }
+
+.category-bubble {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 5px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 25px;
+    font-size: 14px;
+}
+
+ .dropdown-item:hover {
+    background-color: #ffffff23;
+ }
+
+
+ @media (min-width:992px) {
+    .dropdown-menu.show {
+        display: flex;
+        width: auto; 
+        max-width: 600px; 
+    }
+
+    .dropdown-menu .dropdown-item {
+        flex: 1 1 auto; 
+        white-space: nowrap;
+    }
+}
+
