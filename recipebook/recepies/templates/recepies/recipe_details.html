@@ -4,7 +4,7 @@
     <h1>{{ recipe.title }}</h1>
     <div>
       {% for category in recipe.categories.all %}
-          <span class="category-bubble">{{ category.title }}</span>
+          <a href="{% url 'recipes_by_category' category.title %}" class="category-bubble badge ">{{ category.title }}</a>
       {% endfor %}
   </div>
     <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">

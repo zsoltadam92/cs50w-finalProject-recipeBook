@@ -10,6 +10,9 @@ urlpatterns = [
     path("register", views.register, name="register"),
     path('recipe/add/', views.recipe_add, name='recipe_add'),
     path('recipe/<int:recipe_id>', views.recipe_details, name='recipe_details'),
+    path('category/<str:category>/',views.recipes_by_category, name='recipes_by_category'),
+    path('search/',views.search, name='search'),
+
 ] 
 
 if settings.DEBUG:

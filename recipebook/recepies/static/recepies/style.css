@@ -39,21 +39,33 @@
     font-size: 14px;
 }
 
+.category-bubble:hover {
+    color: #fff;
+    background-color: #0056b3;
+}
+
  .dropdown-item:hover {
     background-color: #ffffff23;
  }
 
 
  @media (min-width:992px) {
-    .dropdown-menu.show {
-        display: flex;
-        width: auto; 
+     .dropdown-menu.show {
+         display: flex;
+         width: auto; 
         max-width: 600px; 
     }
-
+    
     .dropdown-menu .dropdown-item {
         flex: 1 1 auto; 
         white-space: nowrap;
     }
+    
 }
 
+@media (max-width:992px) {
+    .search-input {
+        width: 30%;
+        margin-left: 0 !important;
+    }
+}

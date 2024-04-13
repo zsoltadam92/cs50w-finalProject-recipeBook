@@ -31,10 +31,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Recipes</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Search</a>
+                        <a class="nav-link" href="{% url 'index' %}">Recipes</a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -42,13 +39,20 @@
                         </a>
                         <div class="dropdown-menu bg-dark" aria-labelledby="navbarDropdownMenuLink">
                             {% for category in categories %}
-                            <a class="dropdown-item nav-link" href="#">{{ category.title }}</a>
+                            <a class="dropdown-item nav-link" href="{% url 'recipes_by_category' category.title %}">{{ category.title }}</a>
                             {% endfor %}
                         </div>
                     {% if user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'recipe_add' %}">Add New Recipe</a>
                         </li>
+                        <li class="nav-item">
+                            <form action="{% url 'search' %}" method="get" class="d-flex">
+                                <input  name="query" class="form-control ml-2 search-input" type="search" placeholder="Search" aria-label="Search">
+                                <button class="btn btn-outline-success ml-2 my-sm-0" type="submit">Search</button>
+                            </form>
+                        </li>
+                        
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav ml-auto"> 

@@ -61,14 +61,13 @@ def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("index"))
 
-
-
 def index(request):
     categories = Category.objects.all()
     recipes = Recipe.objects.all()
     return render(request, 'recepies/index.html', {'recipes': recipes, 'categories': categories})
 
 def recipe_add(request):
+    categories = Category.objects.all()
     if request.method == 'POST':
         form = RecipeForm(request.POST,request.FILES)
         if form.is_valid():
@@ -76,9 +75,27 @@ def recipe_add(request):
             return redirect('index')
     else:
         form = RecipeForm()
-    return render(request, 'recepies/recipe_form.html', {'form': form})
+    return render(request, 'recepies/recipe_form.html', {'form': form, 'categories': categories})
 
 def recipe_details(request, recipe_id):
+    categories = Category.objects.all()
     recipe = Recipe.objects.get(pk=recipe_id)
 
-    return render(request, "recepies/recipe_details.html", {"recipe": recipe})
+    return render(request, "recepies/recipe_details.html", {"recipe": recipe, 'categories': categories})
+
+
+def recipes_by_category(request, category):
+    categories = Category.objects.all()
+    category = Category.objects.get(title=category)
+    recipes = Recipe.objects.filter(categories=category).order_by('title')  
+    return render(request, 'recepies/recipes_by_category.html', {'recipes': recipes, 'category': category, 'categories': categories})
+
+def search(request):
+    categories = Category.objects.all()
+    query = request.GET.get('query', '')
+    if query:
+        recipes = Recipe.objects.filter(title__icontains=query)
+    else:
+        recipes = Recipe.objects.none()
+    return render(request, 'recepies/search.html', {'recipes': recipes, 'query': query, 'categories': categories})
+    
