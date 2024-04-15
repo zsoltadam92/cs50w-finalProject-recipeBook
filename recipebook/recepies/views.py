@@ -1,13 +1,15 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponseRedirect
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
 from .models import Recipe, Comment, Category
 from .forms import RecipeForm
+from .forms import RatingForm
+
 
 # Create your views here.
 
@@ -80,8 +82,18 @@ def recipe_add(request):
 def recipe_details(request, recipe_id):
     categories = Category.objects.all()
     recipe = Recipe.objects.get(pk=recipe_id)
+    total_ratings = sum(recipe.ratings.values())
 
-    return render(request, "recepies/recipe_details.html", {"recipe": recipe, 'categories': categories})
+
+    if request.method == 'POST':
+        form = RatingForm(request.POST)
+        if form.is_valid():
+            form.save(recipe_id)
+            return redirect('recipe_details', recipe_id=recipe_id)
+    else:
+        form = RatingForm() 
+
+    return render(request, "recepies/recipe_details.html", {"recipe": recipe, 'categories': categories, 'form': form, 'total_ratings': total_ratings})
 
 
 def recipes_by_category(request, category):

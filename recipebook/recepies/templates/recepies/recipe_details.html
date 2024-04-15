@@ -2,6 +2,22 @@
 
 <div class="container mt-3">
     <h1>{{ recipe.title }}</h1>
+    <form method="post" action="{% url 'recipe_details' recipe.id %}" >
+      {% csrf_token %}
+      <div class="rating">
+        {% for choice in form.ratings.field.choices %}
+        <input id="star{{ choice.0 }}" type="radio" name="ratings" value="{{ choice.0 }}" class="star-checkbox" style="display: none;">
+        <label for="star{{ choice.0 }}" class="star">&#9733;</label>
+        {% endfor %}
+    </div>
+      <button type="submit">Értékelés</button>
+    </form>
+    <p>Átlagos értékelés: {{ recipe.average_rating|floatformat:1 }} csillag</p>
+    <p>Értékelések száma: {{ total_ratings }}</p>
+    {% for rate, count in recipe.ratings.items %}
+        <p>{{ rate }} csillag: {{ count }} szavazat</p>
+    {% endfor %}
+  
     <div>
       {% for category in recipe.categories.all %}
           <a href="{% url 'recipes_by_category' category.title %}" class="category-bubble badge ">{{ category.title }}</a>
@@ -37,7 +53,28 @@ function toggleStrikethrough(checkbox) {
     toggleClass(textElement, 'strikethrough', checkbox.checked);
 }
 
+
+
+document.querySelectorAll('.rating label').forEach(label => {
+  label.addEventListener('click', () => {
+      // Minden csillagot először szürkére állít
+      document.querySelectorAll('.rating label').forEach(innerLabel => {
+          innerLabel.style.color = 'grey';
+      });
+
+      // Az adott csillag és minden előző csillag arany színű lesz
+      let currentLabel = label;
+      while (currentLabel) {
+          currentLabel.style.color = 'gold';
+          currentLabel = currentLabel.previousElementSibling ? currentLabel.previousElementSibling.previousElementSibling : null;
+      }
+  });
+});
+
+
 </script>
+
+
 
 
 

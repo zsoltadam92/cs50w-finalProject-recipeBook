@@ -69,3 +69,24 @@
         margin-left: 0 !important;
     }
 }
+
+.star-checkbox {
+    display: none;  /* Elrejti a checkbox elemeket */
+}
+
+.star {
+    font-size: 30px;
+    color: grey;  /* Alapértelmezett szín, ha még nem értékelték */
+    cursor: pointer;
+}
+
+.star-checkbox:checked + .star {
+    color: gold;  /* Szín, ha kijelölték */
+}
+
+/* CSS hover effektus csak olvasásra */
+.star-checkbox:hover + .star,
+.star-checkbox:checked:hover + .star {
+    color: orange;
+}
+
