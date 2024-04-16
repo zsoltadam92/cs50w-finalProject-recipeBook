@@ -82,6 +82,8 @@ def recipe_add(request):
 def recipe_details(request, recipe_id):
     categories = Category.objects.all()
     recipe = Recipe.objects.get(pk=recipe_id)
+    ratings = {str(i): 0 for i in range(5, 0, -1)}
+    ratings.update(recipe.ratings)  
     total_ratings = sum(recipe.ratings.values())
 
 
@@ -93,7 +95,7 @@ def recipe_details(request, recipe_id):
     else:
         form = RatingForm() 
 
-    return render(request, "recepies/recipe_details.html", {"recipe": recipe, 'categories': categories, 'form': form, 'total_ratings': total_ratings})
+    return render(request, "recepies/recipe_details.html", {"recipe": recipe,'ratings': ratings, 'categories': categories, 'form': form, 'total_ratings': total_ratings})
 
 
 def recipes_by_category(request, category):

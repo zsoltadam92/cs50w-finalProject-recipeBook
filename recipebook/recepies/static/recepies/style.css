@@ -80,8 +80,13 @@
     cursor: pointer;
 }
 
+.star-orange {
+    font-size: 1rem;
+    color: orange;
+}
+
 .star-checkbox:checked + .star {
-    color: gold;  /* Szín, ha kijelölték */
+    color: gold;
 }
 
 /* CSS hover effektus csak olvasásra */
@@ -89,4 +94,36 @@
 .star-checkbox:checked:hover + .star {
     color: orange;
 }
+
+.ratings-chart {
+    max-width: 600px;
+    background-color: #f0f0f0;
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+.rating-bar {
+    height: 20px;
+    background-color: #4CAF50;
+    position: relative;
+    line-height: 20px; /* Középre igazítja a szöveget */
+    color: white;
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.rate-label {
+    position: absolute;
+    left: 0;
+    padding-left: 5px;
+}
+
+.count-label {
+    position: absolute;
+    right: 0;
+    padding-right: 5px;
+}
+
+
 
