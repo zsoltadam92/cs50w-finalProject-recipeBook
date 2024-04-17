@@ -3,7 +3,13 @@
       font-family: 'Poppins', sans-serif;
       background-color: #f8f9fa;
       color: #333;
+      /* background-image: url('../images/food-1898194_1280.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat; */
   }
+
+  
 
   .form-control, .form-select {
       border-radius: 0.5rem;
@@ -127,3 +133,15 @@
 
 
 
+
+.card-footer .row > div {
+    display: flex;
+    align-items: center; /* Elemek vertikális középre igazítása */
+}
+
+
+
+.star-orange {
+    font-size: 1.3rem; /* Nagyobb csillag ikon */
+    color: orange; /* Szín beállítása */
+}

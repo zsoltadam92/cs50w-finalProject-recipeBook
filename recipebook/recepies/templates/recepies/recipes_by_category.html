@@ -1,7 +1,7 @@
 {% extends "recepies/layout.html" %} {% block content %}
-<h2 class="mb-4">Recepies</h2>
 
 <div class="container mt-3">
+  <h2 class="mb-4 text-center">{{ category }}</h2>
   <div class="row ml-auto mr-auto">
     {% for recipe in recipes%}
     <div class="col-md-4 col-lg-3 col-xl-2 mb-4">
@@ -20,7 +20,7 @@
           ></a>
         </div>
         <div class="card-footer mt-auto">
-          <p class="card-text">stars: </p>
+          <p class="card-text">{{ recipe.average_rating|floatformat:1 }} <span class="star-orange" style="font-size: 1.3rem">&#9733;</span></p>
         </div>
       </div>
     </div>

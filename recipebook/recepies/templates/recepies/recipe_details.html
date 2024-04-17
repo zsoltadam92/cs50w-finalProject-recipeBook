@@ -6,6 +6,7 @@
 
 <div class="container mt-3">
     <h1>{{ recipe.title }}</h1>
+    <p>{{ recipe.creator }} - {{ recipe.created_at }} </p>
     <form method="post" action="{% url 'recipe_details' recipe.id %}" >
       {% csrf_token %}
       <div class="rating">

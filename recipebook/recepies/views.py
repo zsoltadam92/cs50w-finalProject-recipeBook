@@ -71,13 +71,21 @@ def index(request):
 def recipe_add(request):
     categories = Category.objects.all()
     if request.method == 'POST':
-        form = RecipeForm(request.POST,request.FILES)
+        form = RecipeForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            # Létrehozunk egy új recept példányt a form adataival, de még nem mentjük el.
+            new_recipe = form.save(commit=False)
+            # Beállítjuk a recept létrehozóját a jelenlegi felhasználóra.
+            new_recipe.creator = request.user
+            # Most már elmentjük az adatbázisba.
+            new_recipe.save()
+            # Mivel a categories egy ManyToManyField, ezt csak a példány mentése után állíthatjuk be.
+            form.save_m2m()
             return redirect('index')
     else:
         form = RecipeForm()
     return render(request, 'recepies/recipe_form.html', {'form': form, 'categories': categories})
+
 
 def recipe_details(request, recipe_id):
     categories = Category.objects.all()
@@ -113,3 +121,20 @@ def search(request):
         recipes = Recipe.objects.none()
     return render(request, 'recepies/search.html', {'recipes': recipes, 'query': query, 'categories': categories})
     
+
+
+
+
+# new_recipe = Recipe(
+#                 title=form.cleaned_data["title"],
+#                 serving=form.cleaned_data["serving"],
+#                 preparation_time=form.cleaned_data['preparation_time'],
+#                 difficulty=form.cleaned_data['difficulty'],
+#                 ingredients=form.cleaned_data['ingredients'],
+#                 preparation=form.cleaned_data['preparation'],
+#                 image=form.cleaned_data['image'],
+#                 categories=form.cleaned_data['categories'],
+#                 creator=request.user, 
+#             )
+
+#             new_recipe.save()

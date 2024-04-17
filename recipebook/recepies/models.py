@@ -34,6 +34,9 @@ class Recipe(models.Model):
   categories = models.ManyToManyField(Category, related_name='recipes')
   ratings = models.JSONField(default=dict)
   average_rating = models.FloatField(default=0.0)
+  created_at = models.DateTimeField(auto_now_add=True)
+  creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="creator_recipe")
+
 
   def update_rating(self, new_rating):
     ratings = self.ratings.get(str(new_rating), 0)
