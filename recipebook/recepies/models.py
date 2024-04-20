@@ -12,6 +12,10 @@ class Category(models.Model):
 
   def __str__(self):
         return self.title
+  
+class Ingredient(models.Model):
+ name = models.CharField(max_length=255, unique=True)
+ quantity = models.CharField(max_length=100)
 
 # Difficulty levels for the dropdown menu
 class DifficultyLevel(models.TextChoices):
@@ -28,7 +32,8 @@ class Recipe(models.Model):
     choices=DifficultyLevel.choices,
     default=DifficultyLevel.EASY
   )
-  ingredients = models.TextField(help_text="List ingredients separated by a newline.")
+  raw_ingredients = models.TextField(help_text="List ingredients as free text.")
+  ingredients = models.ManyToManyField(Ingredient, related_name='recipes')
   preparation = models.TextField()
   image = models.ImageField(upload_to='recepies/', null=True, blank=True) 
   categories = models.ManyToManyField(Category, related_name='recipes')
@@ -50,13 +55,23 @@ class Recipe(models.Model):
     return self.title
 
   def get_ingredients_list(self):
-    return self.ingredients.split('\n') 
+    return self.raw_ingredients.split('\n') 
   
   def get_preparation_section(self):
         return self.preparation.split('\n') 
   
   def get_absolute_url(self):
         return reverse('recipe_detail', kwargs={'pk': self.pk})
+  
+
+class ShoppingList(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='shopping_list')
+    ingredients = models.ManyToManyField(Ingredient, through='ShoppingListItem')
+
+class ShoppingListItem(models.Model):
+    shopping_list = models.ForeignKey(ShoppingList, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    purchased = models.BooleanField(default=False)
 
 class Comment(models.Model):
   user = models.ForeignKey(User, on_delete=models.CASCADE,related_name="user")

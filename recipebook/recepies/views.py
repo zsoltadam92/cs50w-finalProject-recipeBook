@@ -6,9 +6,12 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
-from .models import Recipe, Comment, Category
 from .forms import RecipeForm
 from .forms import RatingForm
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from .models import Recipe, ShoppingList, ShoppingListItem, Category, Ingredient
+from django.views.decorators.http import require_http_methods
 
 
 # Create your views here.
@@ -69,23 +72,32 @@ def index(request):
     return render(request, 'recepies/index.html', {'recipes': recipes, 'categories': categories})
 
 def recipe_add(request):
-    categories = Category.objects.all()
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES)
         if form.is_valid():
-            # Létrehozunk egy új recept példányt a form adataival, de még nem mentjük el.
             new_recipe = form.save(commit=False)
-            # Beállítjuk a recept létrehozóját a jelenlegi felhasználóra.
             new_recipe.creator = request.user
-            # Most már elmentjük az adatbázisba.
             new_recipe.save()
-            # Mivel a categories egy ManyToManyField, ezt csak a példány mentése után állíthatjuk be.
+            # Feldolgozzuk a nyers összetevőket
+            raw_ingredients = form.cleaned_data['raw_ingredients']
+            ingredient_names = parse_ingredients(raw_ingredients)  # Implementáld ezt a függvényt a szöveg feldolgozására
+            for name in ingredient_names:
+                ingredient, created = Ingredient.objects.get_or_create(name=name.strip())
+                new_recipe.ingredients.add(ingredient)
+            new_recipe.save()
             form.save_m2m()
             return redirect('index')
     else:
         form = RecipeForm()
-    return render(request, 'recepies/recipe_form.html', {'form': form, 'categories': categories})
+    return render(request, 'recepies/recipe_form.html', {'form': form})
 
+def parse_ingredients(raw_ingredients):
+    # Itt implementáld a szövegből összetevők kinyerését, pl. soronkénti feldolgozással
+    return raw_ingredients.split('\n')
+
+def my_recipes(request):
+    recipes = Recipe.objects.filter(creator=request.user)
+    return render(request, 'recepies/my_recipes.html', {"recipes": recipes})
 
 def recipe_details(request, recipe_id):
     categories = Category.objects.all()
@@ -122,19 +134,34 @@ def search(request):
     return render(request, 'recepies/search.html', {'recipes': recipes, 'query': query, 'categories': categories})
     
 
+def generate_shopping_list(request, recipe_id):
+    try:
+        recipe = Recipe.objects.get(pk=recipe_id)
+        shopping_list, created = ShoppingList.objects.get_or_create(user=request.user)
+        for ingredient in recipe.ingredients.all():
+            ShoppingListItem.objects.create(shopping_list=shopping_list, ingredient=ingredient)
+        return JsonResponse({'status': 'success', 'shopping_list_id': shopping_list.id})
+    except Recipe.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Recipe not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
+    
+def view_shopping_list(request):
+    shopping_list, created = ShoppingList.objects.get_or_create(user=request.user)
+    return render(request, 'recepies/shopping_list.html', {'shopping_list': shopping_list})
 
+def delete_list_item(request, item_id):
+    if request.method == 'POST':
+        item = get_object_or_404(ShoppingListItem, pk=item_id)
+        item.delete()
+        return redirect('view_shopping_list')
+    return redirect('view_shopping_list')
 
-# new_recipe = Recipe(
-#                 title=form.cleaned_data["title"],
-#                 serving=form.cleaned_data["serving"],
-#                 preparation_time=form.cleaned_data['preparation_time'],
-#                 difficulty=form.cleaned_data['difficulty'],
-#                 ingredients=form.cleaned_data['ingredients'],
-#                 preparation=form.cleaned_data['preparation'],
-#                 image=form.cleaned_data['image'],
-#                 categories=form.cleaned_data['categories'],
-#                 creator=request.user, 
-#             )
+@require_http_methods(["POST"])
+def toggle_purchased(request, item_id):
+    item = get_object_or_404(ShoppingListItem, pk=item_id)
+    item.purchased = not item.purchased
+    item.save()
+    return JsonResponse({'status': 'success', 'purchased': item.purchased})
 
-#             new_recipe.save()

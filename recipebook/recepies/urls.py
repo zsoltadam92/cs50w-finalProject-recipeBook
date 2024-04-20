@@ -5,14 +5,19 @@ from . import views
 
 urlpatterns = [
     path("", views.index, name="index"),
+    path('category/<str:category>/',views.recipes_by_category, name='recipes_by_category'),
     path("login", views.login_view, name="login"),
     path("logout", views.logout_view, name="logout"),
+    path("my_recipes", views.my_recipes, name="my_recipes"),
     path("register", views.register, name="register"),
     path('recipe/add/', views.recipe_add, name='recipe_add'),
     path('recipe/<int:recipe_id>', views.recipe_details, name='recipe_details'),
-    path('category/<str:category>/',views.recipes_by_category, name='recipes_by_category'),
     path('search/',views.search, name='search'),
-    # path('recipe/<int:recipe_id>/rate/', views.rate_recipe, name='rate_recipe'),
+    path('shopping-list/', views.view_shopping_list, name='view_shopping_list'),
+    path('shopping-list/generate/<int:recipe_id>/', views.generate_shopping_list, name='generate_shopping_list'),
+    path('shopping-list/delete/<int:item_id>/',views.delete_list_item, name='delete_list_item'),
+
+
 
 ] 
 

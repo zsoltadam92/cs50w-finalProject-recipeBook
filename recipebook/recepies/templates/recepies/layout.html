@@ -63,6 +63,12 @@
                             <span class="navbar-text">{{ user.username }}</span>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="{% url 'my_recipes' %}">My recipes</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'view_shopping_list' %}">Bevásárlólista</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="{% url 'logout' %}">Logout</a>
                         </li>
                     {% else %}

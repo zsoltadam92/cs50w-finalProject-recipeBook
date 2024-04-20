@@ -1,0 +1,23 @@
+<!-- shopping_list_view.html -->
+
+{% extends "recepies/layout.html" %}
+{% block content %}
+<h2>Bevásárlólista</h2>
+
+<ul>
+  {% for item in shopping_list.shoppinglistitem_set.all %}
+  <li>
+      <input type="checkbox" {% if item.purchased %}checked{% endif %} onclick="togglePurchased({{ item.id }});">
+      {{ item.ingredient.name }} - {{ item.ingredient.quantity }}
+
+      <!-- Törlés gomb a formon belül -->
+      <form action="{% url 'delete_list_item' item.id %}" method="post" style="display: inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Delete</button>
+      </form>
+  </li>
+  {% empty %}
+  <p>Nincsenek hozzávalók a kosárban.</p>
+  {% endfor %}
+</ul>
+{% endblock %}
