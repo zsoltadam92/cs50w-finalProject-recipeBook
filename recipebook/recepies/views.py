@@ -5,12 +5,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib import messages
+
 
 from .forms import RecipeForm
 from .forms import RatingForm
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from .models import Recipe, ShoppingList, ShoppingListItem, Category, Ingredient
+from .models import Recipe, ShoppingList, ShoppingListItem, Category, Ingredient, Rating
 from django.views.decorators.http import require_http_methods
 
 
@@ -95,27 +97,58 @@ def parse_ingredients(raw_ingredients):
     # Itt implementáld a szövegből összetevők kinyerését, pl. soronkénti feldolgozással
     return raw_ingredients.split('\n')
 
+
+def edit_recipe(request, recipe_id):
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+    if request.method == 'POST':
+        form = RecipeForm(request.POST, request.FILES, instance=recipe)
+        if form.is_valid():
+            form.save()
+            return redirect('recipe_details', recipe_id=recipe_id)
+    else:
+        form = RecipeForm(instance=recipe)
+    return render(request, 'recepies/edit_recipe.html', {'form': form, 'recipe': recipe})
+
 def my_recipes(request):
     recipes = Recipe.objects.filter(creator=request.user)
     return render(request, 'recepies/my_recipes.html', {"recipes": recipes})
 
 def recipe_details(request, recipe_id):
-    categories = Category.objects.all()
-    recipe = Recipe.objects.get(pk=recipe_id)
-    ratings = {str(i): 0 for i in range(5, 0, -1)}
-    ratings.update(recipe.ratings)  
-    total_ratings = sum(recipe.ratings.values())
-
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+    already_rated = Rating.objects.filter(user=request.user, recipe=recipe).exists()
 
     if request.method == 'POST':
-        form = RatingForm(request.POST)
-        if form.is_valid():
-            form.save(recipe_id)
-            return redirect('recipe_details', recipe_id=recipe_id)
+        if not already_rated:
+            form = RatingForm(request.POST)
+            if form.is_valid():
+                new_rating = form.cleaned_data['ratings']
+                # Létrehozunk egy új Rating objektumot
+                Rating.objects.create(user=request.user, recipe=recipe, score=new_rating)
+                # Frissítjük az átlag értékelést a recepten
+                recipe.update_rating(request.user, int(new_rating))
+                messages.success(request, 'Thank you for rating!')
+                return redirect('recipe_details', recipe_id=recipe_id)
+            else:
+                messages.error(request, 'There was an error with your submission.')
+        else:
+            messages.info(request, 'You have already rated this recipe.')
     else:
-        form = RatingForm() 
+        form = RatingForm()
 
-    return render(request, "recepies/recipe_details.html", {"recipe": recipe,'ratings': ratings, 'categories': categories, 'form': form, 'total_ratings': total_ratings})
+    # Összegyűjtjük az értékeléseket az átlag számításhoz
+    ratings = {str(i): 0 for i in range(5,0,-1)}
+    for rating in recipe.recipe_ratings.all():
+        ratings[str(rating.score)] += 1
+    total_ratings = sum(ratings.values())
+
+    return render(request, "recepies/recipe_details.html", {
+        "recipe": recipe,
+        'ratings': ratings,
+        'total_ratings': total_ratings,
+        'form': form,
+        'already_rated': already_rated,
+    })
+
 
 
 def recipes_by_category(request, category):

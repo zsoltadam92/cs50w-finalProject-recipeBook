@@ -43,13 +43,19 @@ class Recipe(models.Model):
   creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="creator_recipe")
 
 
-  def update_rating(self, new_rating):
-    ratings = self.ratings.get(str(new_rating), 0)
-    self.ratings[str(new_rating)] = ratings + 1
-    total_rating = sum(int(rate) * count for rate, count in self.ratings.items())
-    total_votes = sum(self.ratings.values())
-    self.average_rating = total_rating / total_votes
-    self.save()
+  def update_rating(self, user, new_rating):
+    rating_obj, created = Rating.objects.get_or_create(user=user, recipe=self, defaults={'score': new_rating})
+    if not created:
+        rating_obj.score = new_rating
+        rating_obj.save()
+    self._update_average_rating()
+
+  def _update_average_rating(self):
+      all_ratings = self.recipe_ratings.all()
+      total_rating = sum(rating.score for rating in all_ratings)
+      total_votes = all_ratings.count()
+      self.average_rating = total_rating / total_votes if total_votes else 0
+      self.save()
 
   def __str__(self):
     return self.title
@@ -63,6 +69,13 @@ class Recipe(models.Model):
   def get_absolute_url(self):
         return reverse('recipe_detail', kwargs={'pk': self.pk})
   
+class Rating(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_ratings")
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="recipe_ratings")
+    score = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+
+    class Meta:
+        unique_together = ('user', 'recipe')  # Biztosítja, hogy minden felhasználó csak egyszer értékeljen egy receptet
 
 class ShoppingList(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='shopping_list')
