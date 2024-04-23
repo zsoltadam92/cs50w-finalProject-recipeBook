@@ -77,6 +77,16 @@ class Rating(models.Model):
     class Meta:
         unique_together = ('user', 'recipe')  # Biztosítja, hogy minden felhasználó csak egyszer értékeljen egy receptet
 
+class Favorite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'recipe')
+
+    def __str__(self):
+        return f'{self.user.username} - {self.recipe.title}'
+
 class ShoppingList(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='shopping_list')
     ingredients = models.ManyToManyField(Ingredient, through='ShoppingListItem')

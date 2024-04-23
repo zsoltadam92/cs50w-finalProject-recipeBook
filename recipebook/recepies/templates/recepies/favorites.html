@@ -1,5 +1,5 @@
 {% extends "recepies/layout.html" %} {% block content %}
-<h2 class="mb-4">Recepies</h2>
+<h2 class="mb-4">My Favorites</h2>
 
 <div class="container mt-3">
   <div class="row ml-auto mr-auto">
@@ -10,7 +10,7 @@
           class="card-img-top img-fluid"
           src="{{ recipe.image.url }}" 
           alt="{{ recipe.title }}"
-          style="width: 300px; height: 200px;"
+          style="width: 300px; height: 200px; "
         />
         <div class="card-body">
           <h4 class="card-title">{{ recipe.title|truncatechars:30 }}</h4>

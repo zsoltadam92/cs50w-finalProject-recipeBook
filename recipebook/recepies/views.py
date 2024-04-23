@@ -12,7 +12,7 @@ from .forms import RecipeForm
 from .forms import RatingForm
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from .models import Recipe, ShoppingList, ShoppingListItem, Category, Ingredient, Rating
+from .models import Recipe, ShoppingList, ShoppingListItem, Category, Ingredient, Rating, Favorite
 from django.views.decorators.http import require_http_methods
 
 
@@ -113,41 +113,45 @@ def my_recipes(request):
     recipes = Recipe.objects.filter(creator=request.user)
     return render(request, 'recepies/my_recipes.html', {"recipes": recipes})
 
+
 def recipe_details(request, recipe_id):
     recipe = get_object_or_404(Recipe, pk=recipe_id)
-    already_rated = Rating.objects.filter(user=request.user, recipe=recipe).exists()
+    already_rated = False
+    user_favorite_recipes = []
 
-    if request.method == 'POST':
-        if not already_rated:
-            form = RatingForm(request.POST)
-            if form.is_valid():
-                new_rating = form.cleaned_data['ratings']
-                # Létrehozunk egy új Rating objektumot
-                Rating.objects.create(user=request.user, recipe=recipe, score=new_rating)
-                # Frissítjük az átlag értékelést a recepten
-                recipe.update_rating(request.user, int(new_rating))
-                messages.success(request, 'Thank you for rating!')
-                return redirect('recipe_details', recipe_id=recipe_id)
-            else:
-                messages.error(request, 'There was an error with your submission.')
-        else:
-            messages.info(request, 'You have already rated this recipe.')
+    if request.user.is_authenticated:
+        user_favorite_recipes = [fav.recipe for fav in Favorite.objects.filter(user=request.user)]
+        already_rated = Rating.objects.filter(user=request.user, recipe=recipe).exists()
+
+    ratings, total_ratings = get_ratings_info(recipe)  # Az új segédfüggvény meghívása
+
+    if request.method == 'POST' and request.user.is_authenticated:
+        form = RatingForm(request.POST)
+        if form.is_valid() and not already_rated:
+            new_rating = form.cleaned_data['ratings']
+            Rating.objects.create(user=request.user, recipe=recipe, score=new_rating)
+            recipe.update_rating(new_rating)
+            return redirect('recipe_details', recipe_id=recipe_id)
     else:
-        form = RatingForm()
+        form = RatingForm() if request.user.is_authenticated else None
 
-    # Összegyűjtjük az értékeléseket az átlag számításhoz
-    ratings = {str(i): 0 for i in range(5,0,-1)}
-    for rating in recipe.recipe_ratings.all():
-        ratings[str(rating.score)] += 1
-    total_ratings = sum(ratings.values())
-
-    return render(request, "recepies/recipe_details.html", {
+    context = {
         "recipe": recipe,
+        "user_favorite_recipes": user_favorite_recipes,
         'ratings': ratings,
         'total_ratings': total_ratings,
         'form': form,
         'already_rated': already_rated,
-    })
+    }
+
+    return render(request, "recepies/recipe_details.html", context)
+
+def get_ratings_info(recipe):
+    ratings = {str(i): 0 for i in range(5, 0, -1)}  # Inicializáljuk a szavazatok számát
+    for rating in recipe.recipe_ratings.all():
+        ratings[str(rating.score)] += 1  # Megszámoljuk az egyes értékelések előfordulását
+    total_ratings = sum(ratings.values())  # Összesítjük a szavazatok számát
+    return ratings, total_ratings
 
 
 
@@ -198,3 +202,20 @@ def toggle_purchased(request, item_id):
     item.save()
     return JsonResponse({'status': 'success', 'purchased': item.purchased})
 
+
+def add_to_favorites(request, recipe_id):
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+    if request.method == "POST":
+        favorite, created = Favorite.objects.get_or_create(user=request.user, recipe=recipe)
+        if not created:
+            favorite.delete()  # Ha már létezik, akkor eltávolítjuk
+            messages.success(request, "Recipe removed from your favorites.")
+        else:
+            messages.success(request, "Recipe added to your favorites.")
+        return redirect('recipe_details', recipe_id=recipe_id)
+    return redirect('recipe_details', recipe_id=recipe_id)
+
+
+def list_favorites(request):
+    favorites = Favorite.objects.filter(user=request.user).select_related('recipe')
+    return render(request, 'recepies/favorites.html', {'recipes': [fav.recipe for fav in favorites]})

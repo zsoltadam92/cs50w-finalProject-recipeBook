@@ -7,24 +7,37 @@
 <div class="container mt-3">
     <h1>{{ recipe.title }}</h1>
     {% if user == recipe.creator %}
-    <form action="{% url 'edit_recipe' recipe.id %}" method="get">
-      <button type="submit" class="btn btn-warning">Edit</button>
-    </form>    
+      <form action="{% url 'edit_recipe' recipe.id %}" method="get">
+        <button type="submit" class="btn btn-warning">Edit</button>
+      </form> 
+    {% endif %}
+    {% if user.is_authenticated %}
+      <form method="post" action="{% url 'add_to_favorites' recipe.id %}" >
+        {% csrf_token %}
+        {% if recipe in user_favorite_recipes %}
+          <button type="submit" class="btn btn-danger">Remove from Favorites</button>
+        {% else %}
+          <button type="submit" class="btn btn-warning">Add to Favorites</button>
+        {% endif %}
+      </form>
     {% endif %}
     <p>{{ recipe.creator }} - {{ recipe.created_at }} </p>
     {% if already_rated %}
       <p>You have already rated this recipe.</p>
     {% else %}
-    <form method="post" action="{% url 'recipe_details' recipe.id %}" >
-      {% csrf_token %}
-      <div class="rating">
-        {% for choice in form.ratings.field.choices %}
-        <input id="star{{ choice.0 }}" type="radio" name="ratings" value="{{ choice.0 }}" class="star-checkbox" style="display: none;">
-        <label for="star{{ choice.0 }}" class="star">&#9733;</label>
-        {% endfor %}
-    </div>
-      <button type="submit" class="btn btn-primary">Rating</button>
-    </form>  
+
+      {% if user.is_authenticated %}
+        <form method="post" action="{% url 'recipe_details' recipe.id %}" >
+          {% csrf_token %}
+          <div class="rating">
+            {% for choice in form.ratings.field.choices %}
+            <input id="star{{ choice.0 }}" type="radio" name="ratings" value="{{ choice.0 }}" class="star-checkbox" style="display: none;">
+            <label for="star{{ choice.0 }}" class="star">&#9733;</label>
+            {% endfor %}
+        </div>
+          <button type="submit" class="btn btn-primary">Rating</button>
+        </form>  
+      {% endif %}
     {% endif %}
     
 
@@ -71,10 +84,12 @@
       {% for preparation in recipe.get_preparation_section %}
         <p>{{ preparation }}</p>
       {% endfor %}
-  
-
-    <!-- Recipe Details Page -->
-<button onclick="generateShoppingList({{ recipe.id }})">Generate Shopping List</button>
+      
+      
+      <!-- Recipe Details Page -->
+      {% if user.is_authenticated %}
+      <button onclick="generateShoppingList({{ recipe.id }})">Generate Shopping List</button>
+      {% endif %}
 
 <!-- Shopping List Page -->
 <ul id="shopping-list">
