@@ -72,14 +72,27 @@
     <p>Preparation time: {{ recipe.preparation_time }} min</p>
     <p>Difficulty: {{ recipe.difficulty }}</p>
     <h3>Ingredients:</h3>
-    <ul>
-        {% for ingredient in recipe.get_ingredients_list %}
+  
+    
+    <label for="new-servings">Adagok száma:</label>
+    <input type="number" id="new-servings" value="{{ recipe.serving }}" oninput="updateIngredients()">
+    <input type="hidden" id="original-servings" value="{{ recipe.serving }}">
+
+    <div id="ingredients">
+      <ul>
+        {% for ingredient in recipe.ingredients.all %}
         <li>
           <input type="checkbox" class="ingredient-checkbox" onchange="toggleStrikethrough(this)">
-          <span class="ingredient-text">{{ ingredient }}</span>
+          <span>
+            <span class="ingredient-quantity" data-original-quantity="{{ ingredient.quantity }}">{{ ingredient.quantity }}</span>
+            <span>{{ ingredient.unit }} {{ ingredient.name }}</span>
+          </span> 
         </li>
         {% endfor %}
-    </ul>
+
+      </ul>
+    </div>
+
     <h3>Preparation:</h3>
       {% for preparation in recipe.get_preparation_section %}
         <p>{{ preparation }}</p>
@@ -103,6 +116,22 @@
 </div>
 
 <script>
+
+  
+    function updateIngredients() {
+        const originalServings = parseInt(document.getElementById('original-servings').value);
+        const newServings = parseInt(document.getElementById('new-servings').value);
+        const scale = newServings / originalServings;
+    
+        document.querySelectorAll('.ingredient-quantity').forEach(function(item) {
+            const originalQuantity = parseFloat(item.dataset.originalQuantity);
+            item.textContent = (originalQuantity * scale).toFixed(2); // Két tizedesjegy pontossággal jelenítjük meg
+        });
+    }
+    
+    
+
+
   const toggleClass = (element, className, condition) => {
     condition ? element.classList.add(className) : element.classList.remove(className);
 };

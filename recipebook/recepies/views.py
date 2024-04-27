@@ -6,6 +6,8 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
+from fractions import Fraction
+
 
 
 from .forms import RecipeForm
@@ -82,9 +84,9 @@ def recipe_add(request):
             new_recipe.save()
             # Feldolgozzuk a nyers összetevőket
             raw_ingredients = form.cleaned_data['raw_ingredients']
-            ingredient_names = parse_ingredients(raw_ingredients)  # Implementáld ezt a függvényt a szöveg feldolgozására
-            for name in ingredient_names:
-                ingredient, created = Ingredient.objects.get_or_create(name=name.strip())
+            ingredients_data = parse_ingredients(raw_ingredients)
+            for quantity, unit, name in ingredients_data:
+                ingredient, created = Ingredient.objects.get_or_create(name=name.strip(), defaults={'quantity': quantity, 'unit': unit})
                 new_recipe.ingredients.add(ingredient)
             new_recipe.save()
             form.save_m2m()
@@ -93,21 +95,44 @@ def recipe_add(request):
         form = RecipeForm()
     return render(request, 'recepies/recipe_form.html', {'form': form})
 
-def parse_ingredients(raw_ingredients):
-    # Itt implementáld a szövegből összetevők kinyerését, pl. soronkénti feldolgozással
-    return raw_ingredients.split('\n')
 
+def parse_ingredients(raw_ingredients):
+    ingredients = []
+    lines = raw_ingredients.split('\n')
+    for line in lines:
+        parts = line.split(maxsplit=2)  # Korlátozzuk a split műveletet, hogy a nevet ne bontsa szét
+        if len(parts) >= 3:
+            try:
+                # Kísérlet a frakcióként történő értelmezésre
+                quantity = float(Fraction(parts[0]))  # A Fraction típusú objektumot használjuk közvetlenül
+            except ValueError:
+                continue  # Ha hiba lép fel, hagyjuk ki ezt a sort
+            unit = parts[1]
+            name = parts[2]
+            ingredients.append((quantity, unit, name))
+    return ingredients
 
 def edit_recipe(request, recipe_id):
     recipe = get_object_or_404(Recipe, pk=recipe_id)
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES, instance=recipe)
         if form.is_valid():
-            form.save()
+            updated_recipe = form.save(commit=False)
+            updated_recipe.save()
+            updated_recipe.ingredients.clear()  # Töröljük a korábbi összetevőket
+            # Feldolgozzuk a nyers összetevőket újra, hogy biztosítsuk az új hozzávalók hozzáadását
+            raw_ingredients = form.cleaned_data['raw_ingredients']
+            ingredients_data = parse_ingredients(raw_ingredients)
+            for quantity, unit, name in ingredients_data:
+                ingredient, created = Ingredient.objects.get_or_create(name=name.strip(), defaults={'quantity': quantity, 'unit': unit})
+                updated_recipe.ingredients.add(ingredient)
+            updated_recipe.save()
+            form.save_m2m()  # Menti a ManyToMany kapcsolatokat
             return redirect('recipe_details', recipe_id=recipe_id)
     else:
         form = RecipeForm(instance=recipe)
     return render(request, 'recepies/edit_recipe.html', {'form': form, 'recipe': recipe})
+
 
 def my_recipes(request):
     recipes = Recipe.objects.filter(creator=request.user)
@@ -130,7 +155,7 @@ def recipe_details(request, recipe_id):
         if form.is_valid() and not already_rated:
             new_rating = form.cleaned_data['ratings']
             Rating.objects.create(user=request.user, recipe=recipe, score=new_rating)
-            recipe.update_rating(new_rating)
+            recipe.update_rating(request.user, int(new_rating))
             return redirect('recipe_details', recipe_id=recipe_id)
     else:
         form = RatingForm() if request.user.is_authenticated else None

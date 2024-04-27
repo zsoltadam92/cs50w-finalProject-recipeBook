@@ -11,11 +11,16 @@ class Category(models.Model):
   title = models.CharField(max_length=100)
 
   def __str__(self):
-        return self.title
+    return self.title
   
 class Ingredient(models.Model):
- name = models.CharField(max_length=255, unique=True)
- quantity = models.CharField(max_length=100)
+  name = models.CharField(max_length=255, unique=True)
+  quantity = models.CharField(max_length=100)
+  unit = models.CharField(max_length=50)
+
+  def __str__(self):
+    return f"{self.quantity} {self.unit} {self.name}"
+
 
 # Difficulty levels for the dropdown menu
 class DifficultyLevel(models.TextChoices):
@@ -60,8 +65,6 @@ class Recipe(models.Model):
   def __str__(self):
     return self.title
 
-  def get_ingredients_list(self):
-    return self.raw_ingredients.split('\n') 
   
   def get_preparation_section(self):
         return self.preparation.split('\n') 
