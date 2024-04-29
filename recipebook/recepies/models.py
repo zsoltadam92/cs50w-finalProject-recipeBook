@@ -46,6 +46,7 @@ class Recipe(models.Model):
   average_rating = models.FloatField(default=0.0)
   created_at = models.DateTimeField(auto_now_add=True)
   creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="creator_recipe")
+  comments = models.ManyToManyField('Comment', related_name="comments_on_recipe", blank=True)
 
 
   def update_rating(self, user, new_rating):

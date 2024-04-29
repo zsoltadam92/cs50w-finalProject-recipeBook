@@ -1,5 +1,5 @@
 from django import forms
-from .models import Recipe, Category, Ingredient
+from .models import Recipe, Category, Comment
 
 class RecipeForm(forms.ModelForm):
     class Meta:
@@ -36,3 +36,18 @@ class RatingForm(forms.Form):
     def save(self, recipe_id):
         recipe = Recipe.objects.get(id=recipe_id)
         recipe.update_rating(int(self.cleaned_data['ratings']))
+
+
+# class AddComment(forms.Form):
+#     comment = forms.CharField(
+#         label="",
+#         widget=forms.Textarea(attrs={'placeholder': 'Write a comment', 'class': 'form-control form-group'})
+#     )
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']
+        widgets = {
+            'content': forms.Textarea(attrs={'placeholder': 'Write a comment', 'class': 'form-control form-group'})
+        }

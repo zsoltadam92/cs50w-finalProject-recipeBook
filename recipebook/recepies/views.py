@@ -8,13 +8,10 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from fractions import Fraction
 
-
-
-from .forms import RecipeForm
-from .forms import RatingForm
+from .forms import RatingForm, CommentForm
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from .models import Recipe, ShoppingList, ShoppingListItem, Category, Ingredient, Rating, Favorite
+from .models import Recipe, ShoppingList, ShoppingListItem, Category, Ingredient, Rating, Favorite, Comment
 from django.views.decorators.http import require_http_methods
 
 
@@ -148,25 +145,39 @@ def recipe_details(request, recipe_id):
         user_favorite_recipes = [fav.recipe for fav in Favorite.objects.filter(user=request.user)]
         already_rated = Rating.objects.filter(user=request.user, recipe=recipe).exists()
 
-    ratings, total_ratings = get_ratings_info(recipe)  # Az új segédfüggvény meghívása
+    ratings, total_ratings = get_ratings_info(recipe)
+
+    comment_form = CommentForm()
 
     if request.method == 'POST' and request.user.is_authenticated:
-        form = RatingForm(request.POST)
-        if form.is_valid() and not already_rated:
-            new_rating = form.cleaned_data['ratings']
-            Rating.objects.create(user=request.user, recipe=recipe, score=new_rating)
-            recipe.update_rating(request.user, int(new_rating))
-            return redirect('recipe_details', recipe_id=recipe_id)
-    else:
-        form = RatingForm() if request.user.is_authenticated else None
+        if "comment_form" in request.POST:
+            comment_form = CommentForm(request.POST)
+            if comment_form.is_valid():
+                comment = comment_form.cleaned_data["content"]
+                new_comment = Comment(recipe=recipe, user=request.user, content=comment)
+                new_comment.save()
+                recipe.comments.add(new_comment)
+                recipe.save()
+
+        elif "ratings" in request.POST:
+            form = RatingForm(request.POST)
+            if form.is_valid() and not already_rated:
+                new_rating = form.cleaned_data['ratings']
+                Rating.objects.create(user=request.user, recipe=recipe, score=new_rating)
+                recipe.update_rating(request.user, int(new_rating))
+                return redirect('recipe_details', recipe_id=recipe_id)
+            else:
+                form = RatingForm() if request.user.is_authenticated else None
 
     context = {
         "recipe": recipe,
         "user_favorite_recipes": user_favorite_recipes,
         'ratings': ratings,
         'total_ratings': total_ratings,
-        'form': form,
+        'form': RatingForm(),
         'already_rated': already_rated,
+        "commentForm": CommentForm(),
+        "comments": recipe.comments.all().order_by('-created_at'),
     }
 
     return render(request, "recepies/recipe_details.html", context)
@@ -194,17 +205,24 @@ def search(request):
     else:
         recipes = Recipe.objects.none()
     return render(request, 'recepies/search.html', {'recipes': recipes, 'query': query, 'categories': categories})
-    
 
-def generate_shopping_list(request, recipe_id):
+
+
+def add_to_shopping_list(request, recipe_id, ingredient_name):
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'error', 'message': 'Nem bejelentkezett felhasználó'}, status=403)
+
     try:
         recipe = Recipe.objects.get(pk=recipe_id)
+        ingredient = recipe.ingredients.get(name=ingredient_name)
         shopping_list, created = ShoppingList.objects.get_or_create(user=request.user)
-        for ingredient in recipe.ingredients.all():
-            ShoppingListItem.objects.create(shopping_list=shopping_list, ingredient=ingredient)
-        return JsonResponse({'status': 'success', 'shopping_list_id': shopping_list.id})
+        ShoppingListItem.objects.create(shopping_list=shopping_list, ingredient=ingredient)
+
+        return JsonResponse({'status': 'success'})
     except Recipe.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Recipe not found'}, status=404)
+        return JsonResponse({'status': 'error', 'message': 'Recept nem található'}, status=404)
+    except Ingredient.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Hozzávaló nem található'}, status=404)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
@@ -217,15 +235,15 @@ def delete_list_item(request, item_id):
     if request.method == 'POST':
         item = get_object_or_404(ShoppingListItem, pk=item_id)
         item.delete()
-        return redirect('view_shopping_list')
-    return redirect('view_shopping_list')
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
-@require_http_methods(["POST"])
-def toggle_purchased(request, item_id):
-    item = get_object_or_404(ShoppingListItem, pk=item_id)
-    item.purchased = not item.purchased
-    item.save()
-    return JsonResponse({'status': 'success', 'purchased': item.purchased})
+# @require_http_methods(["POST"])
+# def toggle_purchased(request, item_id):
+#     item = get_object_or_404(ShoppingListItem, pk=item_id)
+#     item.purchased = not item.purchased
+#     item.save()
+#     return JsonResponse({'status': 'success', 'purchased': item.purchased})
 
 
 def add_to_favorites(request, recipe_id):
@@ -244,3 +262,5 @@ def add_to_favorites(request, recipe_id):
 def list_favorites(request):
     favorites = Favorite.objects.filter(user=request.user).select_related('recipe')
     return render(request, 'recepies/favorites.html', {'recipes': [fav.recipe for fav in favorites]})
+
+

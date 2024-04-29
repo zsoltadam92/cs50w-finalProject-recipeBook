@@ -82,6 +82,7 @@
       <ul>
         {% for ingredient in recipe.ingredients.all %}
         <li>
+          <button onclick="addToShoppingList({{ recipe.id }}, '{{ ingredient.name }}')">Add</button>
           <input type="checkbox" class="ingredient-checkbox" onchange="toggleStrikethrough(this)">
           <span>
             <span class="ingredient-quantity" data-original-quantity="{{ ingredient.quantity }}">{{ ingredient.quantity }}</span>
@@ -97,23 +98,41 @@
       {% for preparation in recipe.get_preparation_section %}
         <p>{{ preparation }}</p>
       {% endfor %}
-      
-      
-      <!-- Recipe Details Page -->
-      {% if user.is_authenticated %}
-      <button onclick="generateShoppingList({{ recipe.id }})">Generate Shopping List</button>
-      {% endif %}
 
-<!-- Shopping List Page -->
-<ul id="shopping-list">
-    {% for item in shopping_list.ingredients.all %}
-    <li>
-        {{ item.ingredient.name }} - {{ item.ingredient.quantity }}
-        <input type="checkbox" onchange="togglePurchased({{ item.id }})" {% if item.purchased %}checked{% endif %}>
-    </li>
-    {% endfor %}
-</ul>
-</div>
+
+
+      <div class="row justify-content-center align-items-start">
+        <div class="col-sm-5  col-lg-3 d-flex flex-column mr-5">
+          {% if user.is_authenticated %}
+            <!-- Comment Form -->
+            <form action="{% url 'recipe_details' recipe.id %}" method="post">
+              {% csrf_token %}
+              {{commentForm}}
+              <input type="submit" name="comment_form" value="Send Comment" class="mt-3 btn btn-primary" />
+            </form>
+          {% endif %}
+        </div>
+        
+        <div class="col-sm-6 col-md-6 d-flex flex-column ">
+          <!-- Comments Section -->
+          <h3 class="mt-2 mb-3">Comments</h3>
+          <div class="overflow-auto" style="height: 250px">
+            {% for comment in comments %}
+                <div class="media mt-4">
+                  <div class="media-body">
+                    <div class="d-flex justify-content-between">
+                      <h5 class="mb-3">{{ comment.user.username }}</h5>
+                      <small class="text-muted">{{ comment.created_at }}</small>
+                    </div>
+                    <p>{{ comment.content }}</p>
+                  </div>
+                </div>
+                <hr>
+            {% endfor %} 
+          </div>
+      </div>
+    </div>
+      
 
 <script>
 
@@ -132,7 +151,7 @@
     
 
 
-  const toggleClass = (element, className, condition) => {
+  function toggleClass(element, className, condition) {
     condition ? element.classList.add(className) : element.classList.remove(className);
 };
 
@@ -159,32 +178,29 @@ document.querySelectorAll('.rating label').forEach(label => {
   });
 });
 
-function generateShoppingList(recipeId) {
-  fetch(`/shopping-list/generate/${recipeId}/`, {
+function addToShoppingList(recipeId, ingredientName) {
+  fetch(`/add-to-shopping-list/${recipeId}/${ingredientName}/`, {
       method: 'POST',
       headers: {
           'X-CSRFToken': getCookie('csrftoken'),  // CSRF token
-      }
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ingredientName: ingredientName})
   })
-  .then(response => {
-      if (!response.ok) {
-          throw new Error('Network response was not ok.');
-      }
-      return response.json();
-  })
+  .then(response => response.json())
   .then(data => {
       if (data.status === 'success') {
-          console.log('Shopping list generated successfully');
-          window.location.href = '/shopping-list';
-        } else {
-          alert('Failed to generate shopping list: ' + data.message);
+          alert('Hozzávaló hozzáadva a bevásárlólistához.');
+      } else {
+          alert('Hiba történt: ' + data.message);
       }
   })
-  .catch(error => console.error('Error:', error));
+  .catch(error => console.error('Hiba:', error));
 }
 
 
-function togglePurchased(itemId) {
+
+{% comment %} function togglePurchased(itemId) {
     fetch(`/shopping-list/toggle-purchased/${itemId}/`, {
         method: 'POST',
         headers: {
@@ -199,7 +215,7 @@ function togglePurchased(itemId) {
             alert('Failed to update purchase status');
         }
     });
-}
+} {% endcomment %}
 
 function getCookie(name) {
   let cookieValue = null;
