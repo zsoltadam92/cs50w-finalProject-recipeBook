@@ -14,6 +14,8 @@ from django.http import JsonResponse
 from .models import Recipe, ShoppingList, ShoppingListItem, Category, Ingredient, Rating, Favorite, Comment
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q
+from .utils import paginate_recipes, get_page_range
+
 
 
 # Create your views here.
@@ -71,7 +73,25 @@ def logout_view(request):
 def index(request):
     categories = Category.objects.all()
     recipes = Recipe.objects.all()
-    return render(request, 'recepies/index.html', {'recipes': recipes, 'categories': categories})
+    paginated_recipes = paginate_recipes(request, recipes, per_page=1)
+
+    last_page = paginated_recipes.paginator.num_pages
+    current_page = paginated_recipes.number
+    page_range = get_page_range(current_page, last_page)
+    
+    # Always include the last two page numbers
+    if last_page > 2:
+        last_two_pages = range(last_page - 1, last_page + 1)
+    else:
+        last_two_pages = range(1, last_page + 1)
+
+    return render(request, 'recepies/index.html', {
+        'recipes': paginated_recipes,
+        'categories': categories,
+        'page_range': page_range,
+        'last_two_pages': last_two_pages,
+    })
+
 
 def recipe_add(request):
     if request.method == 'POST':
