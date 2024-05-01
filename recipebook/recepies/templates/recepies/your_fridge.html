@@ -1,0 +1,54 @@
+{% extends "recepies/layout.html" %}
+{% load static %}
+{% block content %}
+
+<p>Add meg azokat az alapanyagokat, amik jelenleg a hűtődben vannak, és megmutatjuk, milyen recepteket készíthetsz belőlük!</p>
+
+<div class="fridge-container">
+  <img src="{% static 'recepies/closed_fridge.jpg' %}" alt="Closed Fridge" id="fridgeImage" onclick="toggleFridge()" width="600px">
+  <div id="fridgeContent" class="fridge-content" style="display:none;">
+
+    <form method="post">
+        {% csrf_token %}
+        {{ fridgeForm.as_p }}
+        <button type="submit" class="btn btn-primary">Receptek keresése</button>
+    </form>
+    
+  </div>
+</div>
+
+{% if matching_recipes %}
+    <h3>Talált receptek:</h3>
+    <ul>
+        {% for recipe in matching_recipes %}
+        <li>
+            <a href="{% url 'recipe_details' recipe.pk %}">{{ recipe.title }}</a>
+            - {{ recipe.preparation_time }} perc
+        </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>Nincs megjeleníthető recept a megadott hozzávalók alapján.</p>
+{% endif %}
+
+<script>
+
+  
+  function toggleFridge() {
+    const image = document.getElementById("fridgeImage");
+    const content = document.getElementById("fridgeContent");
+    if (image.src.match("closed_fridge")) {
+        image.src = "{% static 'recepies/open_fridge.jpg' %}"; 
+        image.alt= "Open Fridge";
+        content.style.display = "block";
+      } else {
+        image.src = "{% static 'recepies/closed_fridge.jpg' %}";
+        image.alt= "Closed Fridge";
+        content.style.display = "none";
+    }
+}
+
+
+</script>
+
+{% endblock %}

@@ -38,12 +38,6 @@ class RatingForm(forms.Form):
         recipe.update_rating(int(self.cleaned_data['ratings']))
 
 
-# class AddComment(forms.Form):
-#     comment = forms.CharField(
-#         label="",
-#         widget=forms.Textarea(attrs={'placeholder': 'Write a comment', 'class': 'form-control form-group'})
-#     )
-
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
@@ -51,3 +45,11 @@ class CommentForm(forms.ModelForm):
         widgets = {
             'content': forms.Textarea(attrs={'placeholder': 'Write a comment', 'class': 'form-control form-group'})
         }
+
+
+class FridgeForm(forms.Form):
+    ingredient_1 = forms.CharField(required=False,max_length = 100)
+    ingredient_2 = forms.CharField(required=False,max_length = 100)
+    ingredient_3 = forms.CharField(required=False,max_length = 100)
+    ingredient_4 = forms.CharField(required=False,max_length = 100)
+    ingredient_5 = forms.CharField(required=False,max_length = 100)

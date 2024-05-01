@@ -136,12 +136,23 @@
 
 .card-footer .row > div {
     display: flex;
-    align-items: center; /* Elemek vertikális középre igazítása */
+    align-items: center; 
 }
 
 
 
 .star-orange {
-    font-size: 1.3rem; /* Nagyobb csillag ikon */
-    color: orange; /* Szín beállítása */
+    font-size: 1.3rem; 
+    color: orange; 
+}
+
+
+.fridge-container img {
+    width: 600px; 
+    cursor: pointer;
+}
+
+.fridge-content {
+    background-color: #f1f1f1;
+    padding: 10px;
 }

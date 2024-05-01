@@ -8,11 +8,12 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from fractions import Fraction
 
-from .forms import RatingForm, CommentForm
+from .forms import RatingForm, CommentForm, FridgeForm
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from .models import Recipe, ShoppingList, ShoppingListItem, Category, Ingredient, Rating, Favorite, Comment
 from django.views.decorators.http import require_http_methods
+from django.db.models import Q
 
 
 # Create your views here.
@@ -263,4 +264,40 @@ def list_favorites(request):
     favorites = Favorite.objects.filter(user=request.user).select_related('recipe')
     return render(request, 'recepies/favorites.html', {'recipes': [fav.recipe for fav in favorites]})
 
+
+def your_fridge(request):
+    fridge_ingredients = []
+    matching_recipes = []
+
+    if request.method == "POST":
+        fridgeForm = FridgeForm(request.POST)
+        if fridgeForm.is_valid():
+            ingredient_1 = fridgeForm.cleaned_data['ingredient_1']
+            ingredient_2 = fridgeForm.cleaned_data['ingredient_2']
+            ingredient_3 = fridgeForm.cleaned_data['ingredient_3']
+            ingredient_4 = fridgeForm.cleaned_data['ingredient_4']
+            ingredient_5 = fridgeForm.cleaned_data['ingredient_5']
+
+            fridge_ingredients = [ingredient_1, ingredient_2, ingredient_3, ingredient_4, ingredient_5]
+            
+            # Filter recipes that contain any of the ingredients listed in the fridge
+            queries = [Q(raw_ingredients__icontains=ingredient) for ingredient in fridge_ingredients if ingredient]
+            print(queries)
+            query = queries.pop()
+            for item in queries:
+                query |= item
+                
+
+            matching_recipes = Recipe.objects.filter(query).distinct()
+
+    else:
+        fridgeForm = FridgeForm()
+        
+    context = {
+        'fridgeForm': fridgeForm,
+        'matching_recipes': matching_recipes,
+        
+    }
+
+    return render(request, "recepies/your_fridge.html", context)
 
