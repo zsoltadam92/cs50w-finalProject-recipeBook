@@ -1,33 +1,9 @@
 {% extends "recepies/layout.html" %} {% block content %}
 <h2 class="mb-4">Search result(s): "{{ query }}"</h2>
 
-<div class="container mt-3">
-  <div class="row ml-auto mr-auto">
-    {% for recipe in recipes%}
-    <div class="col-md-4 col-lg-3 col-xl-2 mb-4">
-      <div class="card card-listing h-100 d-flex flex-column">
-        <img
-          class="card-img-top img-fluid"
-          src="{{ recipe.image.url }}" 
-          alt="{{ recipe.title }}"
-          style="width: 200px"
-        />
-        <div class="card-body">
-          <h4 class="card-title">{{ recipe.title|truncatechars:30 }}</h4>
-          <a
-            href="{% url 'recipe_details' recipe.id %}"
-            class="stretched-link"
-          ></a>
-        </div>
-        <div class="card-footer mt-auto">
-          <p class="card-text">stars: </p>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-</div>
 
+{% include "recepies/recipe_cards.html" with object_list=recipes %}
+{% include "recepies/pagination.html" with object_list=recipes %}
 
 
 

@@ -15,8 +15,18 @@
     <link href="{% static 'recepies/style.css' %}" rel="stylesheet" />
 
     <style>
-      .navbar-brand img {
-          max-height: 100px;
+    
+    .main-content {
+        
+        padding: 1rem;
+        opacity: 0.99;
+    }
+
+      img {
+        object-fit: cover;
+      }
+      .left-img {
+        object-position: 30% 100%;
       }
     </style>
   </head>
@@ -44,35 +54,35 @@
                             <a class="dropdown-item nav-link" href="{% url 'recipes_by_category' category.title %}">{{ category.title }}</a>
                             {% endfor %}
                         </div>
-                    {% if user.is_authenticated %}
+                    </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'recipe_add' %}">New Recipe</a>
+                            <a class="nav-link" href="{% url 'your_fridge' %}">What's in your fridge?</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'favorites' %}">Favorites</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'your_fridge' %}">Mi van a hűtődben</a>
-                        </li>
+
+                        {% if user.is_authenticated %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'recipe_add' %}">Add Recipe</a>
+                            </li>
+                        
+                        {% endif %}
                         <li class="nav-item">
                             <form action="{% url 'search' %}" method="get" class="d-flex">
                                 <input  name="query" class="form-control ml-2 search-input" type="search" placeholder="Search" aria-label="Search">
                                 <button class="btn btn-outline-success ml-2 my-sm-0" type="submit">Search</button>
                             </form>
                         </li>
-                        
-                    {% endif %}
-                </ul>
-                <ul class="navbar-nav ml-auto"> 
-                    {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <span class="navbar-text">{{ user.username }}</span>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'my_recipes' %}">My recipes</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'view_shopping_list' %}">Bevásárlólista</a>
+                    </ul>
+                    <ul class="navbar-nav ml-auto"> 
+                        {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                {{ user.username }}
+                            </a>
+                            <div class="dropdown-menu  bg-dark" aria-labelledby="navbarDropdownMenuLink">
+                                <a class="dropdown-item nav-link" href="{% url 'my_recipes' %}">My recipes</a>
+                                <a class="dropdown-item nav-link" href="{% url 'favorites' %}">Favorites</a>
+                                <a class="dropdown-item nav-link" href="{% url 'view_shopping_list' %}">Shopping list</a>
+                            </div>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'logout' %}">Logout</a>
@@ -90,13 +100,14 @@
         </div>
     </nav>
     
-
-  <!-- Content -->
-  <div class="container mt-3">
-      {% block content %}
-      {% endblock %}
-  </div>
-
+    <div class="container main-content mt-3">
+        {% block content %}
+        {% endblock %}
+    </div>
+    {% comment %} <div class="container-wrapper d-flex">
+        <img src="{% static 'recepies/pizza-3007395_1280.jpg' %}" class="col-2 img-fluid left-img" alt="Left Side Image">
+        <img src="{% static 'recepies/pizza-3007395_1280.jpg' %}" class="col-2 img-fluid right-img" alt="Right Side Image" >
+    </div> {% endcomment %}
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>

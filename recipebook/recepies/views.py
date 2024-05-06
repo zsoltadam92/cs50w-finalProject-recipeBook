@@ -8,17 +8,13 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from fractions import Fraction
 
-from .forms import RatingForm, CommentForm, FridgeForm
+from .forms import RatingForm, CommentForm, FridgeForm, RecipeForm
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from .models import Recipe, ShoppingList, ShoppingListItem, Category, Ingredient, Rating, Favorite, Comment
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q
-from .utils import paginate_recipes, get_page_range
-
-
-
-# Create your views here.
+from .utils import paginate_with_page_range
 
 def register(request):
     if request.method == "POST":
@@ -72,35 +68,25 @@ def logout_view(request):
 
 def index(request):
     categories = Category.objects.all()
-    recipes = Recipe.objects.all()
-    paginated_recipes = paginate_recipes(request, recipes, per_page=1)
-
-    last_page = paginated_recipes.paginator.num_pages
-    current_page = paginated_recipes.number
-    page_range = get_page_range(current_page, last_page)
-    
-    # Always include the last two page numbers
-    if last_page > 2:
-        last_two_pages = range(last_page - 1, last_page + 1)
-    else:
-        last_two_pages = range(1, last_page + 1)
+    recipes = Recipe.objects.all().order_by('created_at')
+    paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=2)
 
     return render(request, 'recepies/index.html', {
-        'recipes': paginated_recipes,
         'categories': categories,
+        'recipes': paginated_recipes,
         'page_range': page_range,
         'last_two_pages': last_two_pages,
     })
 
 
 def recipe_add(request):
+    categories = Category.objects.all()
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES)
         if form.is_valid():
             new_recipe = form.save(commit=False)
             new_recipe.creator = request.user
             new_recipe.save()
-            # Feldolgozzuk a nyers összetevőket
             raw_ingredients = form.cleaned_data['raw_ingredients']
             ingredients_data = parse_ingredients(raw_ingredients)
             for quantity, unit, name in ingredients_data:
@@ -111,53 +97,61 @@ def recipe_add(request):
             return redirect('index')
     else:
         form = RecipeForm()
-    return render(request, 'recepies/recipe_form.html', {'form': form})
+    return render(request, 'recepies/recipe_form.html', {'form': form, 'categories': categories,})
 
 
 def parse_ingredients(raw_ingredients):
     ingredients = []
     lines = raw_ingredients.split('\n')
     for line in lines:
-        parts = line.split(maxsplit=2)  # Korlátozzuk a split műveletet, hogy a nevet ne bontsa szét
+        parts = line.split(maxsplit=2) 
         if len(parts) >= 3:
             try:
-                # Kísérlet a frakcióként történő értelmezésre
-                quantity = float(Fraction(parts[0]))  # A Fraction típusú objektumot használjuk közvetlenül
+                quantity = float(Fraction(parts[0])) 
             except ValueError:
-                continue  # Ha hiba lép fel, hagyjuk ki ezt a sort
+                continue 
             unit = parts[1]
             name = parts[2]
             ingredients.append((quantity, unit, name))
     return ingredients
 
 def edit_recipe(request, recipe_id):
+    categories = Category.objects.all()
     recipe = get_object_or_404(Recipe, pk=recipe_id)
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES, instance=recipe)
         if form.is_valid():
             updated_recipe = form.save(commit=False)
             updated_recipe.save()
-            updated_recipe.ingredients.clear()  # Töröljük a korábbi összetevőket
-            # Feldolgozzuk a nyers összetevőket újra, hogy biztosítsuk az új hozzávalók hozzáadását
+            updated_recipe.ingredients.clear() 
             raw_ingredients = form.cleaned_data['raw_ingredients']
             ingredients_data = parse_ingredients(raw_ingredients)
             for quantity, unit, name in ingredients_data:
                 ingredient, created = Ingredient.objects.get_or_create(name=name.strip(), defaults={'quantity': quantity, 'unit': unit})
                 updated_recipe.ingredients.add(ingredient)
             updated_recipe.save()
-            form.save_m2m()  # Menti a ManyToMany kapcsolatokat
+            form.save_m2m() 
             return redirect('recipe_details', recipe_id=recipe_id)
     else:
         form = RecipeForm(instance=recipe)
-    return render(request, 'recepies/edit_recipe.html', {'form': form, 'recipe': recipe})
+    return render(request, 'recepies/edit_recipe.html', {'form': form, 'recipe': recipe, 'categories': categories})
 
 
 def my_recipes(request):
+    categories = Category.objects.all()
     recipes = Recipe.objects.filter(creator=request.user)
-    return render(request, 'recepies/my_recipes.html', {"recipes": recipes})
+    paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=2)
+
+    return render(request, 'recepies/my_recipes.html', {
+        'categories': categories, 
+        'recipes': paginated_recipes,
+        'page_range': page_range,
+        'last_two_pages': last_two_pages,
+        })
 
 
 def recipe_details(request, recipe_id):
+    categories = Category.objects.all()
     recipe = get_object_or_404(Recipe, pk=recipe_id)
     already_rated = False
     user_favorite_recipes = []
@@ -199,15 +193,16 @@ def recipe_details(request, recipe_id):
         'already_rated': already_rated,
         "commentForm": CommentForm(),
         "comments": recipe.comments.all().order_by('-created_at'),
+        'categories': categories
     }
 
     return render(request, "recepies/recipe_details.html", context)
 
 def get_ratings_info(recipe):
-    ratings = {str(i): 0 for i in range(5, 0, -1)}  # Inicializáljuk a szavazatok számát
+    ratings = {str(i): 0 for i in range(5, 0, -1)}
     for rating in recipe.recipe_ratings.all():
-        ratings[str(rating.score)] += 1  # Megszámoljuk az egyes értékelések előfordulását
-    total_ratings = sum(ratings.values())  # Összesítjük a szavazatok számát
+        ratings[str(rating.score)] += 1 
+    total_ratings = sum(ratings.values())
     return ratings, total_ratings
 
 
@@ -216,7 +211,15 @@ def recipes_by_category(request, category):
     categories = Category.objects.all()
     category = Category.objects.get(title=category)
     recipes = Recipe.objects.filter(categories=category).order_by('title')  
-    return render(request, 'recepies/recipes_by_category.html', {'recipes': recipes, 'category': category, 'categories': categories})
+    paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=2)
+
+    return render(request, 'recepies/recipes_by_category.html', {
+        'categories': categories, 
+        'category': category,
+        'recipes': paginated_recipes,
+        'page_range': page_range,
+        'last_two_pages': last_two_pages,
+        })
 
 def search(request):
     categories = Category.objects.all()
@@ -225,13 +228,22 @@ def search(request):
         recipes = Recipe.objects.filter(title__icontains=query)
     else:
         recipes = Recipe.objects.none()
-    return render(request, 'recepies/search.html', {'recipes': recipes, 'query': query, 'categories': categories})
+
+    paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=2)
+
+    return render(request, 'recepies/search.html', {
+        'categories': categories, 
+        'query': query,
+        'recipes': paginated_recipes,
+        'page_range': page_range,
+        'last_two_pages': last_two_pages,
+        })
 
 
 
 def add_to_shopping_list(request, recipe_id, ingredient_name):
     if not request.user.is_authenticated:
-        return JsonResponse({'status': 'error', 'message': 'Nem bejelentkezett felhasználó'}, status=403)
+        return JsonResponse({'status': 'error', 'message': 'Not logged.'}, status=403)
 
     try:
         recipe = Recipe.objects.get(pk=recipe_id)
@@ -241,7 +253,7 @@ def add_to_shopping_list(request, recipe_id, ingredient_name):
 
         return JsonResponse({'status': 'success'})
     except Recipe.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Recept nem található'}, status=404)
+        return JsonResponse({'status': 'error', 'message': 'Recipe not found'}, status=404)
     except Ingredient.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Hozzávaló nem található'}, status=404)
     except Exception as e:
@@ -249,8 +261,9 @@ def add_to_shopping_list(request, recipe_id, ingredient_name):
 
     
 def view_shopping_list(request):
+    categories = Category.objects.all()
     shopping_list, created = ShoppingList.objects.get_or_create(user=request.user)
-    return render(request, 'recepies/shopping_list.html', {'shopping_list': shopping_list})
+    return render(request, 'recepies/shopping_list.html', {'shopping_list': shopping_list, 'categories': categories})
 
 def delete_list_item(request, item_id):
     if request.method == 'POST':
@@ -259,20 +272,13 @@ def delete_list_item(request, item_id):
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
-# @require_http_methods(["POST"])
-# def toggle_purchased(request, item_id):
-#     item = get_object_or_404(ShoppingListItem, pk=item_id)
-#     item.purchased = not item.purchased
-#     item.save()
-#     return JsonResponse({'status': 'success', 'purchased': item.purchased})
-
 
 def add_to_favorites(request, recipe_id):
     recipe = get_object_or_404(Recipe, pk=recipe_id)
     if request.method == "POST":
         favorite, created = Favorite.objects.get_or_create(user=request.user, recipe=recipe)
         if not created:
-            favorite.delete()  # Ha már létezik, akkor eltávolítjuk
+            favorite.delete()
             messages.success(request, "Recipe removed from your favorites.")
         else:
             messages.success(request, "Recipe added to your favorites.")
@@ -281,11 +287,20 @@ def add_to_favorites(request, recipe_id):
 
 
 def list_favorites(request):
+    categories = Category.objects.all()
     favorites = Favorite.objects.filter(user=request.user).select_related('recipe')
-    return render(request, 'recepies/favorites.html', {'recipes': [fav.recipe for fav in favorites]})
+    paginated_favorites, page_range, last_two_pages = paginate_with_page_range(request, [fav.recipe for fav in favorites], per_page=2)
+
+    return render(request, 'recepies/favorites.html', {
+        'categories': categories, 
+        'recipes': paginated_favorites,
+        'page_range': page_range,
+        'last_two_pages': last_two_pages,
+        })
 
 
 def your_fridge(request):
+    categories = Category.objects.all()
     fridge_ingredients = []
     matching_recipes = []
 
@@ -316,6 +331,7 @@ def your_fridge(request):
     context = {
         'fridgeForm': fridgeForm,
         'matching_recipes': matching_recipes,
+        'categories': categories
         
     }
 

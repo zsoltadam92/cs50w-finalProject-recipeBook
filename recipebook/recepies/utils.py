@@ -1,28 +1,35 @@
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-def paginate_recipes(request, recipes, per_page):
-    paginator = Paginator(recipes, per_page)
+def paginate_with_page_range(request, queryset, per_page):
+    """
+    Paginates the queryset and generates a page range including the last two pages.
+    """
+    paginator = Paginator(queryset, per_page)
     page = request.GET.get('page')
-    
+
     try:
-        paginated_recipes = paginator.page(page)
+        paginated_queryset = paginator.page(page)
     except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        paginated_recipes = paginator.page(1)
+        # If page is not an integer, deliver the first page.
+        paginated_queryset = paginator.page(1)
     except EmptyPage:
-        # If page is out of range, deliver last page of results.
-        paginated_recipes = paginator.page(paginator.num_pages)
+        # If page is out of range, deliver the last page of results.
+        paginated_queryset = paginator.page(paginator.num_pages)
 
-    return paginated_recipes
+    # Determine the page range
+    current_page = paginated_queryset.number
+    last_page = paginator.num_pages
+    window = 2
 
+    # Basic page range logic
+    start_page = max(current_page - window, 1)
+    end_page = min(current_page + window, last_page) + 1
+    page_range = range(start_page, end_page)
 
-def get_page_range(current_page, last_page, window=2):
-    """
-    Generate a range of page numbers for pagination.
-    `window` specifies how many pages to show on each side of the current page.
-    """
-    start = max(current_page - window, 1)
-    end = min(current_page + window, last_page) + 1
-    return range(start, end)
+    # Always include the last two pages
+    if last_page > 2:
+        last_two_pages = range(last_page - 1, last_page + 1)
+    else:
+        last_two_pages = range(1, last_page + 1)
 
-
+    return paginated_queryset, page_range, last_two_pages

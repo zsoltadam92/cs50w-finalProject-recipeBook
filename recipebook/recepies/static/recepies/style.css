@@ -1,15 +1,15 @@
 
   body {
       font-family: 'Poppins', sans-serif;
-      background-color: #f8f9fa;
+      background-color: #fbfbfb;
       color: #333;
-      /* background-image: url('../images/food-1898194_1280.jpg');
+      /* background-image: url('../recepies/wooden-wall-1846867_1280.jpg');
     background-size: cover;
     background-position: center;
-    background-repeat: no-repeat; */
+    background-repeat: no-repeat;
+     */
   }
 
-  
 
   .form-control, .form-select {
       border-radius: 0.5rem;
@@ -56,7 +56,7 @@
 
 
  @media (min-width:992px) {
-     .dropdown-menu.show {
+     /* .dropdown-menu.show {
          display: flex;
          width: auto; 
         max-width: 600px; 
@@ -65,8 +65,12 @@
     .dropdown-menu .dropdown-item {
         flex: 1 1 auto; 
         white-space: nowrap;
+    } */
+
+    /* .user-dropdown {
+        display: block;
     }
-    
+     */
 }
 
 @media (max-width:992px) {

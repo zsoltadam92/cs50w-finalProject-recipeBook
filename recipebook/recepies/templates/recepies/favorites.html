@@ -1,59 +1,8 @@
 {% extends "recepies/layout.html" %} {% block content %}
-<h2 class="mb-4">My Favorites</h2>
 
-<div class="container mt-3">
-  <div class="row ml-auto mr-auto">
-    {% for recipe in recipes%}
-    <div class="col-6 col-md-6 col-lg-3 mb-4">
-      <div class="card card-listing h-100 d-flex flex-column">
-        <img
-          class="card-img-top img-fluid"
-          src="{{ recipe.image.url }}" 
-          alt="{{ recipe.title }}"
-          style="width: 300px; height: 200px; "
-        />
-        <div class="card-body">
-          <h4 class="card-title">{{ recipe.title|truncatechars:30 }}</h4>
-          <a
-            href="{% url 'recipe_details' recipe.id %}"
-            class="stretched-link"
-          ></a>
-        </div>
-        <div class="card-footer mt-auto">
-          <div class="row">
-              <!-- Első sor: Idő és adagok -->
-              <div class="col-6 d-flex align-items-center">
-                  <i class="bi bi-hourglass-split"></i>
-                  <span class="ml-2">{{ recipe.preparation_time }} min</span>
-              </div>
-              <div class="col-6 d-flex align-items-center">
-                  <i class="bi bi-people-fill"></i>
-                  <span class="ml-2">{{ recipe.serving }}</span>
-              </div>
-      
-              <!-- Második sor: Nehézség és értékelés -->
-              <div class="col-6 d-flex align-items-center">
-                  <i class="bi bi-speedometer2"></i>
-                  <span class="ml-2">{{ recipe.difficulty }}</span>
-              </div>
-              <div class="col-6 d-flex align-items-center">
-                  <p class="mb-0">{{ recipe.average_rating|floatformat:1 }} <span class="star-orange" style="font-size: 1.3rem">&#9733;</span></p>
-              </div>
-          </div>
-      </div>
-      
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-</div>
+<h2 class="pl-5 mb-4">Favorites</h2>
 
-
-
-
+{% include "recepies/recipe_cards.html" with object_list=recipes %}
+{% include "recepies/pagination.html" with object_list=recipes %}
 
 {% endblock %}
-
-
-
-
