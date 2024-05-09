@@ -18,6 +18,7 @@ urlpatterns = [
     path('add-to-shopping-list/<int:recipe_id>/<str:ingredient_name>/', views.add_to_shopping_list, name='add_to_shopping_list'),
     path('delete-list-item/<int:item_id>/', views.delete_list_item, name='delete_list_item'),
     path('add-to-favorites/<int:recipe_id>/', views.add_to_favorites, name='add_to_favorites'),
+    path('remove-from-shopping-list/<int:recipe_id>/<str:ingredient_name>/', views.remove_from_shopping_list, name='remove_from_shopping_list'),
     path('favorites/', views.list_favorites, name='favorites'),
     path('your_fridge/', views.your_fridge, name='your_fridge'),
 

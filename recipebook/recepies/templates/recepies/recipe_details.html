@@ -4,149 +4,253 @@
 {% block content %}
 
 
-<div class="container mt-3">
-    <h1>{{ recipe.title }}</h1>
-    {% if user == recipe.creator %}
-      <form action="{% url 'edit_recipe' recipe.id %}" method="get">
-        <button type="submit" class="btn btn-warning">Edit</button>
-      </form> 
-    {% endif %}
-    {% if user.is_authenticated %}
-      <form method="post" action="{% url 'add_to_favorites' recipe.id %}" >
-        {% csrf_token %}
-        {% if recipe in user_favorite_recipes %}
-          <button type="submit" class="btn btn-danger">Remove from Favorites</button>
-        {% else %}
-          <button type="submit" class="btn btn-warning">Add to Favorites</button>
-        {% endif %}
-      </form>
-    {% endif %}
-    <p>{{ recipe.creator }} - {{ recipe.created_at }} </p>
-    {% if already_rated %}
-      <p>You have already rated this recipe.</p>
-    {% else %}
+<div class="container-fluid">
+  <div class="row">
 
-      {% if user.is_authenticated %}
-        <form method="post" action="{% url 'recipe_details' recipe.id %}" >
+    <!-- Section: Recipe Image -->
+    <figure class="col-md-6 p-0">
+      <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}" class="img-fluid" style="height: 50vh; width: 100%; object-fit: cover;">
+    </figure>
+
+    <!-- Section: Recipe Info -->
+    <section class="col-md-6 pb-4 pl-5 d-flex flex-column">
+      <!-- Recipe Categories -->
+      <div>
+        <div>
+          {% for category in recipe.categories.all %}
+            <a href="{% url 'recipes_by_category' category.title %}" class="category-bubble badge">{{ category.title }}</a>
+          {% endfor %}
+        </div>
+
+        <!-- Recipe Title and Actions -->
+        <header class="d-flex justify-content-between mb-2"> 
+          <h1 style="max-width: 380px; word-wrap: break-word;">{{ recipe.title }}</h1>
+
+          <!-- Edit Button (Visible if User is Creator) -->
+          {% if user == recipe.creator %}
+            <form action="{% url 'edit_recipe' recipe.id %}" method="get">
+              <button type="submit" class="btn btn-warning">Edit</button>
+            </form>
+          {% endif %}
+
+          <!-- Favorite Button -->
+          {% if user.is_authenticated and user != recipe.creator %}
+            <form method="post" action="{% url 'add_to_favorites' recipe.id %}">
+              {% csrf_token %}
+              {% if recipe in user_favorite_recipes %}
+                <button type="submit" class="btn btn-danger"><i class="bi bi-heart-fill"></i></button>
+              {% else %}
+                <button type="submit" class="btn btn-transparent" style="border: 1px solid #333"><i class="bi bi-heart"></i></button>
+              {% endif %}
+            </form>
+          {% endif %}
+        </header>
+
+        <!-- Recipe Metadata -->
+        <p class="mb-4"><strong>{{ recipe.creator }}</strong> - {{ recipe.created_at|date:"Y-m-d" }}</p>
+        <div class="d-flex justify-content-center align-items-center p-2" style="box-shadow: 0px 0px 5px 3px #3D47FF; background: #fff; border-radius: 5px;">
+          <!-- Preparation Time -->
+          <div class="mr-4">
+            <i class="bi bi-hourglass-split"></i>
+            <span class="ml-0">{{ recipe.preparation_time }} min</span>
+          </div>
+          <!-- Serving Size -->
+          <div class="mr-4">
+            <i class="bi bi-people-fill"></i>
+            <span class="ml-0">{{ recipe.serving }} Bowls</span>
+          </div>
+          <!-- Difficulty Level -->
+          <div class="mr-4">
+            <i class="bi bi-speedometer2"></i>
+            <span class="ml-0">{{ recipe.difficulty }}</span>
+          </div>
+          <!-- Average Rating -->
+          <div class="mr-4">
+            <p class="mb-0">{{ recipe.average_rating|floatformat:1 }} <span class="star-orange" style="font-size: 1.3rem">&#9733;</span> (<small><a href="#ratings-section">{{ total_ratings }} review{{ recipe.ratings|pluralize:"s" }}</small></a>)</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Ingredients -->
+    <aside class="col-md-6 py-4">
+      <section id="ingredientsSection">
+        <h4 class="mb-4">Ingredients</h4>
+        <div class="text-center mb-3 d-flex align-items-center justify-content-center">
+          <span for="new-servings">For</span>
+          <input type="number" id="new-servings" class="form-control ml-2 mr-2" value="{{ recipe.serving }}" oninput="updateIngredients()" min=1 max=99>
+          <input type="hidden" id="original-servings" value="{{ recipe.serving }}">
+          <span> people</span>
+        </div>
+
+        <!-- Ingredients List -->
+        <div id="ingredients" class="ingredients-list">
+          <ul>
+            {% for ingredient in recipe.ingredients.all %}
+            <li class="ingredient-item">
+              <div class="checkbox-wrapper">
+                <label>
+                  <input type="checkbox" onchange="toggleStrikethrough(this)">
+                  <span class="checkbox"></span>
+                  <span class="ingredient-details">
+                    <span class="ingredient-quantity" data-original-quantity="{{ ingredient.quantity }}">{{ ingredient.quantity }}</span>
+                    <span class="ingredient-unit">{{ ingredient.unit }}</span>
+                    <span class="ingredient-name">{{ ingredient.name }}</span>
+                  </span>
+                </label>
+              </div>
+
+              <!-- Add to Shopping List Button -->
+              <button onclick="toggleShoppingList({{ recipe.id }}, '{{ ingredient.name }}', this)" class="btn btn-info add-to-list"><i class="bi bi-cart"></i></button>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </section>
+    </aside>
+
+    <!-- Section: Preparation -->
+    <section class="col-md-6 py-4 pl-5">
+      <h3>Preparation</h3>
+      {% for preparation in recipe.get_preparation_section %}
+      <p>{{ preparation }}</p>
+      {% endfor %}
+    </section>
+
+    <!-- Section: Ratings -->
+    <aside class="col-md-6 py-4">
+      <section id="ratings-section">
+        {% if already_rated %}
+        <p class="text-center bg-info ml-auto mr-auto" style="width: 80%; color: #fff">You have already rated this recipe.</p>
+        {% else %}
+
+        {% if user.is_authenticated %}
+        <div class="text-center">
+          <h3>Rate this recipe</h3>
+          <div style="height: 85px">
+            <i class="bi bi-arrow-down" id="animated-icon"></i>
+          </div>
+        </div>
+        <form method="post" action="{% url 'recipe_details' recipe.id %}" class="text-center mb-4">
           {% csrf_token %}
           <div class="rating">
             {% for choice in form.ratings.field.choices %}
             <input id="star{{ choice.0 }}" type="radio" name="ratings" value="{{ choice.0 }}" class="star-checkbox" style="display: none;">
             <label for="star{{ choice.0 }}" class="star">&#9733;</label>
             {% endfor %}
-        </div>
+          </div>
           <button type="submit" class="btn btn-primary">Rating</button>
-        </form>  
-      {% endif %}
-    {% endif %}
-    
+        </form>
+        {% endif %}
+        {% endif %}
+      </section>
 
-    <p>Avarage: {{ recipe.average_rating|floatformat:1 }}  <span class="star-orange" style="font-size: 1.3rem">&#9733;</span></p>
-    <p>{{ total_ratings }} review{{ recipe.ratings|pluralize:"s" }}</p>
-
-    <div class="ratings-chart" style="max-width: 400px">
-      {% for rate, count in ratings.items %}
-      <div class="d-flex">
-        <p class="mr-2" style="width: 80px">
-          <span class="star-orange">
-            {{ rate|repeat_star }}
-          </span>
-        </p>
-        <div style="width: 250px">
-          <div class="rating-bar mr-auto" style="width: {{ count|multiply_percentage:total_ratings }}; background-color: #4CAF50; height: 20px; color: white; text-align: center; margin-bottom: 5px;">
+      <!-- Ratings Summary Chart -->
+      <section class="d-flex justify-content-center mb-4">
+        <div class="d-flex flex-column justify-content-center align-items-center">
+          <div style="background: #1a1a1a; color:#fff; padding: 1rem; margin-right: -40px ;text-align: center; z-index:3">
+            <h2 class="mb-0">{{ recipe.average_rating|floatformat:1 }} <span class="star-orange" style="font-size: 2.5rem">&#9733;</span></h2>
+            <small>({{ total_ratings }} review{{ recipe.ratings|pluralize:"s" }})</small>
           </div>
         </div>
-        <p class="ml-2" style="width: 90px">{{ count }} vote{{ count|pluralize:"s" }}</p>
-      </div>
-      {% endfor %}
-    </div>
-  
-  
-    <div>
-      {% for category in recipe.categories.all %}
-          <a href="{% url 'recipes_by_category' category.title %}" class="category-bubble badge ">{{ category.title }}</a>
-      {% endfor %}
-  </div>
-    <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}" style="width: 250px ">
-    <p>Yields: {{ recipe.serving }} serving(s)</p>
-    <p>Preparation time: {{ recipe.preparation_time }} min</p>
-    <p>Difficulty: {{ recipe.difficulty }}</p>
-    <h3>Ingredients:</h3>
-  
-    
-    <label for="new-servings">Adagok száma:</label>
-    <input type="number" id="new-servings" value="{{ recipe.serving }}" oninput="updateIngredients()">
-    <input type="hidden" id="original-servings" value="{{ recipe.serving }}">
+        <div class="ratings-chart" style="max-width: 400px; padding-left: 70px">
+          {% for rate, count in ratings.items %}
+          <div class="d-flex align-items-center mb-2">
+            <p class="mr-2 mb-0" style="width: 150px">
+              <span class="star-orange">{{ rate|repeat_star }}</span>
+            </p>
+            <div style="width: 250px">
+              <div class="rating-bar mr-auto" style="width: {{ count|multiply_percentage:total_ratings }}; background-color: #4CAF50; height: 10px;">
+              </div>
+            </div>
+            <p class="ml-2 mb-0" style="width: 120px">{{ count }} vote{{ count|pluralize:"s" }}</p>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+    </aside>
 
-    <div id="ingredients">
-      <ul>
-        {% for ingredient in recipe.ingredients.all %}
-        <li>
-          <button onclick="addToShoppingList({{ recipe.id }}, '{{ ingredient.name }}')">Add</button>
-          <input type="checkbox" class="ingredient-checkbox" onchange="toggleStrikethrough(this)">
-          <span>
-            <span class="ingredient-quantity" data-original-quantity="{{ ingredient.quantity }}">{{ ingredient.quantity }}</span>
-            <span>{{ ingredient.unit }} {{ ingredient.name }}</span>
-          </span> 
-        </li>
-        {% endfor %}
-
-      </ul>
-    </div>
-
-    <h3>Preparation:</h3>
-      {% for preparation in recipe.get_preparation_section %}
-        <p>{{ preparation }}</p>
-      {% endfor %}
-
-
-
-      <div class="row justify-content-center align-items-start">
-        <div class="col-sm-5  col-lg-3 d-flex flex-column mr-5">
+    <!-- Section: Comments -->
+    <section class="col-md-6 py-4 pl-5">
+      <div class="">
+        <div class="d-flex flex-column mr-5">
           {% if user.is_authenticated %}
-            <!-- Comment Form -->
-            <form action="{% url 'recipe_details' recipe.id %}" method="post">
-              {% csrf_token %}
-              {{commentForm}}
-              <input type="submit" name="comment_form" value="Send Comment" class="mt-3 btn btn-primary" />
-            </form>
+          <!-- Comment Form -->
+          <form action="{% url 'recipe_details' recipe.id %}" method="post">
+            {% csrf_token %}
+            {{commentForm}}
+            <input type="submit" name="comment_form" value="Send Comment" class="mt-3 btn btn-primary"/>
+          </form>
           {% endif %}
         </div>
-        
-        <div class="col-sm-6 col-md-6 d-flex flex-column ">
-          <!-- Comments Section -->
-          <h3 class="mt-2 mb-3">Comments</h3>
-          <div class="overflow-auto" style="height: 250px">
-            {% for comment in comments %}
-                <div class="media mt-4">
-                  <div class="media-body">
-                    <div class="d-flex justify-content-between">
-                      <h5 class="mb-3">{{ comment.user.username }}</h5>
-                      <small class="text-muted">{{ comment.created_at }}</small>
-                    </div>
-                    <p>{{ comment.content }}</p>
-                  </div>
-                </div>
-                <hr>
-            {% endfor %} 
-          </div>
       </div>
-    </div>
-      
+    </section>
+
+    <!-- Comments List -->
+    <section class="col-8 d-flex flex-column mr-auto ml-auto mb-4">
+      <h3 class="mt-2 mb-3 text-center">Comments</h3>
+      <div class="overflow-auto" style="height: 450px">
+        {% for comment in comments %}
+        <article class="media mt-4">
+          <div class="media-body">
+            <div class="d-flex justify-content-between">
+              <h5 class="mb-3">{{ comment.user.username }}</h5>
+              <small class="text-muted">{{ comment.created_at }}</small>
+            </div>
+            <p>{{ comment.content }}</p>
+          </div>
+        </article>
+        <hr>
+        {% endfor %}
+      </div>
+    </section>
+
+  </div>
+</div>
+
+
+
+ 
 
 <script>
 
-  
-    function updateIngredients() {
-        const originalServings = parseInt(document.getElementById('original-servings').value);
-        const newServings = parseInt(document.getElementById('new-servings').value);
-        const scale = newServings / originalServings;
-    
-        document.querySelectorAll('.ingredient-quantity').forEach(function(item) {
-            const originalQuantity = parseFloat(item.dataset.originalQuantity);
-            item.textContent = (originalQuantity * scale).toFixed(2); // Két tizedesjegy pontossággal jelenítjük meg
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+            behavior: 'smooth'
         });
-    }
+    });
+});
+
+  function updateIngredients() {
+    const originalServings = parseInt(document.getElementById('original-servings').value);
+    const newServings = parseInt(document.getElementById('new-servings').value);
+    const scale = newServings / originalServings;
+
+    document.querySelectorAll('.ingredient-quantity').forEach(function(item) {
+        const originalQuantity = parseFloat(item.dataset.originalQuantity.replace(',', '.'));
+        if (!isNaN(originalQuantity)) {
+            // Két tizedesjegyig kerekítjük, majd eltávolítjuk a fölösleges nullákat
+            let scaledQuantity = (originalQuantity * scale).toFixed(2);
+
+            // Ha .00-ra végződik, akkor teljesen elhagyjuk a tizedesjegyeket
+            if (scaledQuantity.endsWith('.00')) {
+                scaledQuantity = parseInt(scaledQuantity, 10).toString();
+            } else if (scaledQuantity.endsWith('0')) {
+                // Ha csak egy 0 van a végén, akkor azt is levágjuk
+                scaledQuantity = scaledQuantity.slice(0, -1);
+            }
+
+            item.textContent = scaledQuantity;
+        } else {
+            item.textContent = "Error";
+        }
+    });
+}
+
+
     
     
 
@@ -156,7 +260,7 @@
 };
 
 function toggleStrikethrough(checkbox) {
-    const textElement = checkbox.nextElementSibling;
+    const textElement = checkbox.nextElementSibling.nextElementSibling;
     toggleClass(textElement, 'strikethrough', checkbox.checked);
 }
 
@@ -178,44 +282,40 @@ document.querySelectorAll('.rating label').forEach(label => {
   });
 });
 
-function addToShoppingList(recipeId, ingredientName) {
-  fetch(`/add-to-shopping-list/${recipeId}/${ingredientName}/`, {
+function toggleShoppingList(recipeId, ingredientName, button) {
+  let isInList = button.querySelector('i').classList.contains('bi-cart-check-fill');
+
+  let url = isInList ? `/remove-from-shopping-list/${recipeId}/${ingredientName}/` : `/add-to-shopping-list/${recipeId}/${ingredientName}/`;
+
+  fetch(url, {
       method: 'POST',
       headers: {
-          'X-CSRFToken': getCookie('csrftoken'),  // CSRF token
+          'X-CSRFToken': getCookie('csrftoken'),
           'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ingredientName: ingredientName})
+      body: JSON.stringify({ingredientName: ingredientName, 'action': isInList ? 'remove' : 'add'})
   })
   .then(response => response.json())
   .then(data => {
       if (data.status === 'success') {
-          alert('Hozzávaló hozzáadva a bevásárlólistához.');
+          // Sikeres hozzáadás vagy törlés esetén váltás az ikon között
+          if (isInList) {
+              button.innerHTML = '<i class="bi bi-cart"></i>';
+              button.classList.remove("btn-success")
+              button.classList.add("btn-info")
+            } else {
+              button.innerHTML = '<i class="bi bi-cart-check-fill"></i>';
+              button.classList.remove("btn-info")
+              button.classList.add("btn-success")
+          }
       } else {
-          alert('Hiba történt: ' + data.message);
+          alert(data.message);
       }
   })
-  .catch(error => console.error('Hiba:', error));
+  .catch(error => console.error('Error:', error));
 }
 
 
-
-{% comment %} function togglePurchased(itemId) {
-    fetch(`/shopping-list/toggle-purchased/${itemId}/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken'),  // CSRF token beállítása
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            console.log('Purchase status updated:', data.purchased);
-        } else {
-            alert('Failed to update purchase status');
-        }
-    });
-} {% endcomment %}
 
 function getCookie(name) {
   let cookieValue = null;

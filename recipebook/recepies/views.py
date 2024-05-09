@@ -15,6 +15,8 @@ from .models import Recipe, ShoppingList, ShoppingListItem, Category, Ingredient
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q
 from .utils import paginate_with_page_range
+import json
+
 
 def register(request):
     if request.method == "POST":
@@ -69,7 +71,7 @@ def logout_view(request):
 def index(request):
     categories = Category.objects.all()
     recipes = Recipe.objects.all().order_by('created_at')
-    paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=2)
+    paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=12)
 
     return render(request, 'recepies/index.html', {
         'categories': categories,
@@ -140,7 +142,7 @@ def edit_recipe(request, recipe_id):
 def my_recipes(request):
     categories = Category.objects.all()
     recipes = Recipe.objects.filter(creator=request.user)
-    paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=2)
+    paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=12)
 
     return render(request, 'recepies/my_recipes.html', {
         'categories': categories, 
@@ -211,7 +213,7 @@ def recipes_by_category(request, category):
     categories = Category.objects.all()
     category = Category.objects.get(title=category)
     recipes = Recipe.objects.filter(categories=category).order_by('title')  
-    paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=2)
+    paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=12)
 
     return render(request, 'recepies/recipes_by_category.html', {
         'categories': categories, 
@@ -229,7 +231,7 @@ def search(request):
     else:
         recipes = Recipe.objects.none()
 
-    paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=2)
+    paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=12)
 
     return render(request, 'recepies/search.html', {
         'categories': categories, 
@@ -249,8 +251,11 @@ def add_to_shopping_list(request, recipe_id, ingredient_name):
         recipe = Recipe.objects.get(pk=recipe_id)
         ingredient = recipe.ingredients.get(name=ingredient_name)
         shopping_list, created = ShoppingList.objects.get_or_create(user=request.user)
-        ShoppingListItem.objects.create(shopping_list=shopping_list, ingredient=ingredient)
 
+        if ShoppingListItem.objects.filter(shopping_list=shopping_list, ingredient=ingredient).exists():
+            return JsonResponse({'status': 'error', 'message': 'Ingredient already in the list'})
+
+        ShoppingListItem.objects.create(shopping_list=shopping_list, ingredient=ingredient)
         return JsonResponse({'status': 'success'})
     except Recipe.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Recipe not found'}, status=404)
@@ -272,6 +277,21 @@ def delete_list_item(request, item_id):
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
+def remove_from_shopping_list(request, recipe_id, ingredient_name):
+    if request.method == 'POST':
+        try:
+            recipe = Recipe.objects.get(pk=recipe_id)
+            ingredient = recipe.ingredients.get(name=ingredient_name)
+            shopping_list_item = ShoppingListItem.objects.get(
+                shopping_list__user=request.user, 
+                ingredient=ingredient
+            )
+            shopping_list_item.delete()
+            return JsonResponse({'status': 'success'})
+        except (Recipe.DoesNotExist, Ingredient.DoesNotExist, ShoppingListItem.DoesNotExist):
+            return JsonResponse({'status': 'error', 'message': 'Item not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 def add_to_favorites(request, recipe_id):
     recipe = get_object_or_404(Recipe, pk=recipe_id)
@@ -289,7 +309,7 @@ def add_to_favorites(request, recipe_id):
 def list_favorites(request):
     categories = Category.objects.all()
     favorites = Favorite.objects.filter(user=request.user).select_related('recipe')
-    paginated_favorites, page_range, last_two_pages = paginate_with_page_range(request, [fav.recipe for fav in favorites], per_page=2)
+    paginated_favorites, page_range, last_two_pages = paginate_with_page_range(request, [fav.recipe for fav in favorites], per_page=12)
 
     return render(request, 'recepies/favorites.html', {
         'categories': categories, 

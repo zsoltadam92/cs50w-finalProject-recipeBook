@@ -1,13 +1,14 @@
 
+  
   body {
       font-family: 'Poppins', sans-serif;
       background-color: #fbfbfb;
-      color: #333;
-      /* background-image: url('../recepies/wooden-wall-1846867_1280.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-     */
+      color: #333;    
+  }
+
+  #new-servings {
+    width: 70px;
+    text-align: center;
   }
 
 
@@ -114,13 +115,11 @@
 }
 
 .rating-bar {
-    height: 20px;
+    height: 10px;
     background-color: #4CAF50;
     position: relative;
-    line-height: 20px; /* Középre igazítja a szöveget */
-    color: white;
-    text-align: center;
-    margin-bottom: 5px;
+    border-radius: 10px;
+    /* margin-bottom: 5px; */
 }
 
 .rate-label {
@@ -160,3 +159,102 @@
     background-color: #f1f1f1;
     padding: 10px;
 }
+
+
+@keyframes pulse {
+    0%, 100% {
+      font-size: 32px;
+      font-weight: 400;
+    }
+    33% {
+        font-size: 48px;
+        font-weight: 500;
+    }
+    67% {
+        font-size: 64px;
+        font-weight: 700;
+    }
+  }
+  
+  #animated-icon {
+    animation: pulse 3s infinite; /* 3 másodperc a teljes ciklus hossza, végtelen ismétlődéssel */
+  }
+  
+
+  .ingredients-list ul {
+    list-style-type: none; /* Eltávolítja a lista pöttyöket */
+    padding-left: 0; /* Eltávolítja az alapértelmezett paddingot */
+}
+
+.ingredient-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px; 
+    padding: 8px;
+    border-bottom: 1px solid #ccc;
+}
+
+.ingredient-details {
+    display: flex;
+    align-items: center;
+}
+
+.ingredient-quantity, .ingredient-unit, .ingredient-name {
+    margin-right: 5px; 
+}
+
+.add-to-list {
+    margin-left: auto; 
+    padding: 5px 10px; 
+}
+
+
+
+
+
+.checkbox-wrapper label {
+    display: flex;
+    align-items: center;
+  }
+  
+  .checkbox-wrapper .checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #999;
+    border-radius: 4px;
+    position: relative;
+    transition: background 0.3s, border-color 0.3s;
+    margin-right: 10px; 
+  }
+  
+  .checkbox-wrapper input {
+    display: none;
+  }
+  
+  .checkbox-wrapper input:checked + .checkbox {
+    background: #4CAF50;
+    border-color: #4CAF50;
+  }
+  
+  .checkbox-wrapper input:checked + .checkbox::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 6px;
+    height: 10px;
+    border-style: solid;
+    border-width: 0 2px 2px 0;
+    border-color: white;
+    transform: rotate(45deg);
+    display: block;
+  }
+  
+
+
+
+
+
+
+

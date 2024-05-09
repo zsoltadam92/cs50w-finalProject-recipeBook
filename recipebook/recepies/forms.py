@@ -31,7 +31,7 @@ class RecipeForm(forms.ModelForm):
 
 
 class RatingForm(forms.Form):
-    ratings = forms.ChoiceField(choices=[(str(i), str(i) + ' csillag') for i in range(1, 6)])
+    ratings = forms.ChoiceField(choices=[(str(i), str(i) + ' star') for i in range(1, 6)])
 
     def save(self, recipe_id):
         recipe = Recipe.objects.get(id=recipe_id)
@@ -42,8 +42,11 @@ class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ['content']
+        labels = {
+            'content': '',
+        }
         widgets = {
-            'content': forms.Textarea(attrs={'placeholder': 'Write a comment', 'class': 'form-control form-group'})
+            'content': forms.Textarea(attrs={'placeholder': 'Write a comment', 'class': 'form-control form-group col-12', 'rows':5 })
         }
 
 

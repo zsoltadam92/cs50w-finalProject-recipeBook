@@ -22,12 +22,6 @@
         opacity: 0.99;
     }
 
-      img {
-        object-fit: cover;
-      }
-      .left-img {
-        object-position: 30% 100%;
-      }
     </style>
   </head>
   <body>
@@ -100,14 +94,10 @@
         </div>
     </nav>
     
-    <div class="container main-content mt-3">
+    <div class="container  mt-3">
         {% block content %}
         {% endblock %}
     </div>
-    {% comment %} <div class="container-wrapper d-flex">
-        <img src="{% static 'recepies/pizza-3007395_1280.jpg' %}" class="col-2 img-fluid left-img" alt="Left Side Image">
-        <img src="{% static 'recepies/pizza-3007395_1280.jpg' %}" class="col-2 img-fluid right-img" alt="Right Side Image" >
-    </div> {% endcomment %}
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
