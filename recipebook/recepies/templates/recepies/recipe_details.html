@@ -9,7 +9,7 @@
 
     <!-- Section: Recipe Image -->
     <figure class="col-md-6 p-0">
-      <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}" class="img-fluid" style="height: 50vh; width: 100%; object-fit: cover;">
+      <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}" class="img-fluid img-recipe" >
     </figure>
 
     <!-- Section: Recipe Info -->
@@ -22,53 +22,53 @@
           {% endfor %}
         </div>
 
-        <!-- Recipe Title and Actions -->
-        <header class="d-flex justify-content-between mb-2"> 
-          <h1 style="max-width: 380px; word-wrap: break-word;">{{ recipe.title }}</h1>
+      <!-- Recipe Title and Actions -->
+      <header class="d-flex justify-content-between mb-2"> 
+        <h1 class="recipe-title">{{ recipe.title }}</h1>
 
-          <!-- Edit Button (Visible if User is Creator) -->
-          {% if user == recipe.creator %}
+        <!-- Edit Button (Visible if User is Creator) -->
+        {% if user == recipe.creator %}
             <form action="{% url 'edit_recipe' recipe.id %}" method="get">
-              <button type="submit" class="btn btn-warning">Edit</button>
+                <button type="submit" class="btn btn-warning">Edit</button>
             </form>
-          {% endif %}
+        {% endif %}
 
-          <!-- Favorite Button -->
-          {% if user.is_authenticated and user != recipe.creator %}
+        <!-- Favorite Button -->
+        {% if user.is_authenticated and user != recipe.creator %}
             <form method="post" action="{% url 'add_to_favorites' recipe.id %}">
-              {% csrf_token %}
-              {% if recipe in user_favorite_recipes %}
-                <button type="submit" class="btn btn-danger"><i class="bi bi-heart-fill"></i></button>
-              {% else %}
-                <button type="submit" class="btn btn-transparent" style="border: 1px solid #333"><i class="bi bi-heart"></i></button>
-              {% endif %}
+                {% csrf_token %}
+                {% if recipe in user_favorite_recipes %}
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-heart-fill"></i></button>
+                {% else %}
+                    <button type="submit" class="btn btn-transparent favorite-btn"><i class="bi bi-heart"></i></button>
+                {% endif %}
             </form>
-          {% endif %}
-        </header>
+        {% endif %}
+      </header>
 
-        <!-- Recipe Metadata -->
-        <p class="mb-4"><strong>{{ recipe.creator }}</strong> - {{ recipe.created_at|date:"Y-m-d" }}</p>
-        <div class="d-flex justify-content-center align-items-center p-2" style="box-shadow: 0px 0px 5px 3px #3D47FF; background: #fff; border-radius: 5px;">
+
+      <!-- Recipe Metadata -->
+      <p class="mb-4"><strong>{{ recipe.creator }}</strong> - {{ recipe.created_at|date:"Y-m-d" }}</p>
+      <div class="d-flex justify-content-center align-items-center p-2 recipe-metadata-container">
           <!-- Preparation Time -->
           <div class="mr-4">
-            <i class="bi bi-hourglass-split"></i>
-            <span class="ml-0">{{ recipe.preparation_time }} min</span>
+              <i class="bi bi-hourglass-split"></i>
+              <span>{{ recipe.preparation_time }} min</span>
           </div>
           <!-- Serving Size -->
           <div class="mr-4">
-            <i class="bi bi-people-fill"></i>
-            <span class="ml-0">{{ recipe.serving }} Bowls</span>
+              <i class="bi bi-people-fill"></i>
+              <span>{{ recipe.serving }} Bowls</span>
           </div>
           <!-- Difficulty Level -->
           <div class="mr-4">
-            <i class="bi bi-speedometer2"></i>
-            <span class="ml-0">{{ recipe.difficulty }}</span>
+              <i class="bi bi-speedometer2"></i>
+              <span>{{ recipe.difficulty }}</span>
           </div>
           <!-- Average Rating -->
           <div class="mr-4">
-            <p class="mb-0">{{ recipe.average_rating|floatformat:1 }} <span class="star-orange" style="font-size: 1.3rem">&#9733;</span> (<small><a href="#ratings-section">{{ total_ratings }} review{{ recipe.ratings|pluralize:"s" }}</small></a>)</p>
+              <p class="mb-0">{{ recipe.average_rating|floatformat:1 }} <span class="star-orange">&#9733;</span> (<small><a href="#ratings-section">{{ total_ratings }} review{{ recipe.ratings|pluralize:"s" }}</small></a>)</p>
           </div>
-        </div>
       </div>
     </section>
 
@@ -87,15 +87,15 @@
         <div id="ingredients" class="ingredients-list">
           <ul>
             {% for ingredient in recipe.ingredients.all %}
-            <li class="ingredient-item">
+            <li class="ingredient-item d-flex align-items-center justify-content-between mb-2">
               <div class="checkbox-wrapper">
                 <label>
                   <input type="checkbox" onchange="toggleStrikethrough(this)">
                   <span class="checkbox"></span>
-                  <span class="ingredient-details">
-                    <span class="ingredient-quantity" data-original-quantity="{{ ingredient.quantity }}">{{ ingredient.quantity }}</span>
-                    <span class="ingredient-unit">{{ ingredient.unit }}</span>
-                    <span class="ingredient-name">{{ ingredient.name }}</span>
+                  <span class="d-flex align-items-center">
+                    <span class="ingredient-quantity mr-1" data-original-quantity="{{ ingredient.quantity }}">{{ ingredient.quantity }}</span>
+                    <span class="ingredient-unit  mr-1">{{ ingredient.unit }}</span>
+                    <span class="ingredient-name  mr-1">{{ ingredient.name }}</span>
                   </span>
                 </label>
               </div>
@@ -121,13 +121,13 @@
     <aside class="col-md-6 py-4">
       <section id="ratings-section">
         {% if already_rated %}
-        <p class="text-center bg-info ml-auto mr-auto" style="width: 80%; color: #fff">You have already rated this recipe.</p>
+        <p class="text-center bg-info ml-auto mr-auto rating-alert" >You have already rated this recipe.</p>
         {% else %}
 
         {% if user.is_authenticated %}
         <div class="text-center">
           <h3>Rate this recipe</h3>
-          <div style="height: 85px">
+          <div class="rate-instructions">
             <i class="bi bi-arrow-down" id="animated-icon"></i>
           </div>
         </div>
@@ -135,7 +135,7 @@
           {% csrf_token %}
           <div class="rating">
             {% for choice in form.ratings.field.choices %}
-            <input id="star{{ choice.0 }}" type="radio" name="ratings" value="{{ choice.0 }}" class="star-checkbox" style="display: none;">
+            <input id="star{{ choice.0 }}" type="radio" name="ratings" value="{{ choice.0 }}" class="star-checkbox d-none" >
             <label for="star{{ choice.0 }}" class="star">&#9733;</label>
             {% endfor %}
           </div>
@@ -148,22 +148,22 @@
       <!-- Ratings Summary Chart -->
       <section class="d-flex justify-content-center mb-4">
         <div class="d-flex flex-column justify-content-center align-items-center">
-          <div style="background: #1a1a1a; color:#fff; padding: 1rem; margin-right: -40px ;text-align: center; z-index:3">
-            <h2 class="mb-0">{{ recipe.average_rating|floatformat:1 }} <span class="star-orange" style="font-size: 2.5rem">&#9733;</span></h2>
+          <div class="rating-summary-container">
+            <h2 class="mb-0">{{ recipe.average_rating|floatformat:1 }} <span class="star-orange rating-summary-star">&#9733;</span></h2>
             <small>({{ total_ratings }} review{{ recipe.ratings|pluralize:"s" }})</small>
           </div>
         </div>
-        <div class="ratings-chart" style="max-width: 400px; padding-left: 70px">
+        <div class="ratings-chart">
           {% for rate, count in ratings.items %}
           <div class="d-flex align-items-center mb-2">
-            <p class="mr-2 mb-0" style="width: 150px">
+            <p class="mr-2 mb-0  rating-star-count">
               <span class="star-orange">{{ rate|repeat_star }}</span>
             </p>
-            <div style="width: 250px">
-              <div class="rating-bar mr-auto" style="width: {{ count|multiply_percentage:total_ratings }}; background-color: #4CAF50; height: 10px;">
+            <div class="rating-bar-wrapper">
+              <div class="rating-bar mr-auto" style="width: {{ count|multiply_percentage:total_ratings }};">
               </div>
             </div>
-            <p class="ml-2 mb-0" style="width: 120px">{{ count }} vote{{ count|pluralize:"s" }}</p>
+            <p class="ml-2 mb-0 rating-vote-count" >({{ count }})</p>
           </div>
           {% endfor %}
         </div>
@@ -189,7 +189,7 @@
     <!-- Comments List -->
     <section class="col-8 d-flex flex-column mr-auto ml-auto mb-4">
       <h3 class="mt-2 mb-3 text-center">Comments</h3>
-      <div class="overflow-auto" style="height: 450px">
+      <div class="overflow-auto comment-panel" >
         {% for comment in comments %}
         <article class="media mt-4">
           <div class="media-body">
@@ -210,19 +210,21 @@
 
 
 
+
+
  
 
 <script>
 
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
+   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
         e.preventDefault();
 
         document.querySelector(this.getAttribute('href')).scrollIntoView({
-            behavior: 'smooth'
+          behavior: 'smooth'
         });
+      });
     });
-});
 
   function updateIngredients() {
     const originalServings = parseInt(document.getElementById('original-servings').value);
