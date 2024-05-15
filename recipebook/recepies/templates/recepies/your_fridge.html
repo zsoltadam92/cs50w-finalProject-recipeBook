@@ -6,11 +6,25 @@
 
 <div class="fridge-container">
   <img src="{% static 'recepies/closed_fridge.jpg' %}" alt="Closed Fridge" id="fridgeImage" onclick="toggleFridge()" width="600px">
-  <div id="fridgeContent" class="fridge-content" style="display:none;">
+  <div id="fridgeContent" class="fridge-content col-3" style="display:none;">
 
-    <form method="post">
+    <form method="post" class=" d-flex flex-column align-items-center justify-content-center">
         {% csrf_token %}
-        {{ fridgeForm.as_p }}
+        <div>
+          {{ fridgeForm.ingredient_1 }}
+        </div>
+        <div>
+          {{ fridgeForm.ingredient_2 }}
+        </div>
+        <div>
+        {{ fridgeForm.ingredient_3 }}
+        </div>
+        <div>
+          {{ fridgeForm.ingredient_4 }}
+        </div>
+        <div>
+          {{ fridgeForm.ingredient_5 }}
+        </div>
         <button type="submit" class="btn btn-primary">Receptek keresése</button>
     </form>
     

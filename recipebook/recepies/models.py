@@ -37,7 +37,7 @@ class Recipe(models.Model):
     choices=DifficultyLevel.choices,
     default=DifficultyLevel.EASY
   )
-  raw_ingredients = models.TextField(help_text="List ingredients as free text.")
+  raw_ingredients = models.TextField()
   ingredients = models.ManyToManyField(Ingredient, related_name='recipes')
   preparation = models.TextField()
   image = models.ImageField(upload_to='recepies/', null=True, blank=True) 

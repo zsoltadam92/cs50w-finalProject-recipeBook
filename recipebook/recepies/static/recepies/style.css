@@ -249,3 +249,53 @@ body {
 .comment-panel {
     height: 450px;
 }
+
+
+/* recipe_form.html---------- */
+.add-recipe-background {
+    background-image: url('../recepies/food-2879265_1280.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+  }
+  
+  .new_recipe_card {
+    background: rgba(255, 255, 255, 0.75); 
+  }
+
+.form-wrapper .form-control,
+.form-wrapper .form-select,
+.form-wrapper .form_check_input {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(8px);
+    margin-bottom: 1rem;
+}
+
+.form-wrapper .form-control:focus,
+.form-wrapper .form-select:focus {
+    border-color: #00E5FF;
+    outline: none;
+    box-shadow: 0 0 5px #00E5FF;
+}
+
+
+
+.form-wrapper input[type=checkbox]:checked {
+    background-color: #00E5FF;
+    border-color: #00E5FF;
+}
+
+
+
+.form-check-inline label{
+    margin-right: 10px;
+}
+.form-check-inline label input[type=checkbox]{
+    margin-right: 6px;
+}
+
+
+  

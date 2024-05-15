@@ -5,15 +5,18 @@ class RecipeForm(forms.ModelForm):
     class Meta:
         model = Recipe
         fields = ['title', 'serving', 'preparation_time', 'difficulty', 'raw_ingredients', 'preparation', 'image', 'categories']
+        labels = {
+            'raw_ingredients': 'Ingredients',
+        }
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'serving': forms.NumberInput(attrs={'class': 'form-control'}),
             'preparation_time': forms.NumberInput(attrs={'class': 'form-control'}),
-            'difficulty': forms.Select(attrs={'class': 'form-select'}),
-            'raw_ingredients': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Enter ingredients freely. E.g., 2 eggs, 1 cup sugar...'}),
-            'preparation': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Enter step by step preparation.'}),
+            'difficulty': forms.Select(attrs={'class': 'form-select form-control'}),
+            'raw_ingredients': forms.Textarea(attrs={ 'class': 'form-control', 'rows': 8, 'placeholder': 'E.g. \n\n 0.5 kg flour \n 1 cup sugar'}),
+            'preparation': forms.Textarea(attrs={'class': 'form-control', 'rows': 8, 'placeholder': 'Enter step by step preparation.'}),
             'image': forms.FileInput(attrs={'class': 'form-control'}),
-            'categories': forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'})
+            'categories': forms.CheckboxSelectMultiple(attrs={'class': 'form-group '})
         }
 
     def __init__(self, *args, **kwargs):
