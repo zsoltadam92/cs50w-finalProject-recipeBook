@@ -1,49 +1,55 @@
 {% extends "recepies/layout.html" %}
 {% load static %}
+{% block body_class %}fridge-background{% endblock %}
 {% block content %}
 
-<p>Add meg azokat az alapanyagokat, amik jelenleg a hűtődben vannak, és megmutatjuk, milyen recepteket készíthetsz belőlük!</p>
-
-<div class="fridge-container">
-  <img src="{% static 'recepies/closed_fridge.jpg' %}" alt="Closed Fridge" id="fridgeImage" onclick="toggleFridge()" width="600px">
-  <div id="fridgeContent" class="fridge-content col-3" style="display:none;">
-
-    <form method="post" class=" d-flex flex-column align-items-center justify-content-center">
-        {% csrf_token %}
-        <div>
-          {{ fridgeForm.ingredient_1 }}
-        </div>
-        <div>
-          {{ fridgeForm.ingredient_2 }}
-        </div>
-        <div>
-        {{ fridgeForm.ingredient_3 }}
-        </div>
-        <div>
-          {{ fridgeForm.ingredient_4 }}
-        </div>
-        <div>
-          {{ fridgeForm.ingredient_5 }}
-        </div>
-        <button type="submit" class="btn btn-primary">Receptek keresése</button>
-    </form>
-    
+<div class="d-flex justify-content-between align-items-center">
+  
+  <div class="fridge-container ">
+    <img src="{% static 'recepies/closed_fridge.jpg' %}" class="fridge-image" alt="Closed Fridge" id="fridgeImage" onclick="toggleFridge()" width="600px">
+    <div id="fridgeContent" class="fridge-content  " style="display:none;">
+  
+      <form method="post" id="fridgeForm" class="d-flex flex-column align-items-center justify-content-center">
+          {% csrf_token %}
+          <div class="mb-4">
+            {{ fridgeForm.ingredient_1 }}
+          </div>
+          <div class="mb-4">
+            {{ fridgeForm.ingredient_2 }}
+          </div>
+          <div class="mb-4">
+          {{ fridgeForm.ingredient_3 }}
+          </div>
+          <div class="mb-4">
+            {{ fridgeForm.ingredient_4 }}
+          </div>
+          <div class="mb-4">
+            {{ fridgeForm.ingredient_5 }}
+          </div>
+          <div class="mb-4">
+            {{ fridgeForm.ingredient_6 }}
+          </div>
+          <input type="hidden" name="submitted" value="true">
+          <button type="submit" class="btn btn-primary mt-4" >Search</button>
+      </form> 
+      
+    </div>
   </div>
+
+  <p class="col-5 info-text">Click on the fridge, enter the ingredients you currently have in your fridge and we'll show you what you can make with them!</p>
 </div>
 
-{% if matching_recipes %}
-    <h3>Talált receptek:</h3>
-    <ul>
-        {% for recipe in matching_recipes %}
-        <li>
-            <a href="{% url 'recipe_details' recipe.pk %}">{{ recipe.title }}</a>
-            - {{ recipe.preparation_time }} perc
-        </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>Nincs megjeleníthető recept a megadott hozzávalók alapján.</p>
-{% endif %}
+<h3 class="fridge-recipe mt-4 ml-auto mr-auto  mb-4 p-2 text-center text-light bg-dark">Recipes</h3>
+<section id="recipes-section">
+  {% if matching_recipes is None %}
+      <h3 class="text-light">No recipes</h3>
+  {% elif matching_recipes %}
+      {% include "recepies/recipe_cards.html" with object_list=matching_recipes %}
+      {% include "recepies/pagination.html" with object_list=matching_recipes %}
+  {% else %}
+      <h3 class="text-light text-center">No recipe can be displayed based on the ingredients provided</h3>
+  {% endif %}
+</section>
 
 <script>
 
@@ -61,6 +67,17 @@
         content.style.display = "none";
     }
 }
+
+
+
+  document.addEventListener("DOMContentLoaded", function() {
+    {% if submitted %}
+    window.scrollTo({
+        top: document.getElementById('recipes-section').offsetTop,
+        behavior: 'smooth'
+    });
+    {% endif %}
+});
 
 
 </script>

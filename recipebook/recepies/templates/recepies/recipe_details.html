@@ -1,4 +1,5 @@
-{% extends "recepies/layout.html" %} {% load multiply_percentage %} {% load extra_filters %}
+{% extends "recepies/layout.html" %} {% load multiply_percentage %} {% load extra_filters %} {% load format_quantity %}
+
 
 
 {% block content %}
@@ -78,11 +79,11 @@
         <h4 class="mb-4">Ingredients</h4>
         <div class="text-center mb-3 d-flex align-items-center justify-content-center">
           <span for="new-servings">For</span>
-          <input type="number" id="new-servings" class="form-control ml-2 mr-2" value="{{ recipe.serving }}" oninput="updateIngredients()" min=1 max=99>
+          <input type="number" id="new-servings" class="form-control ml-2 mr-2" value="{{ recipe.serving }}" oninput="updateIngredients()" min="1" max="99">
           <input type="hidden" id="original-servings" value="{{ recipe.serving }}">
           <span> people</span>
         </div>
-
+    
         <!-- Ingredients List -->
         <div id="ingredients" class="ingredients-list">
           <ul>
@@ -93,13 +94,13 @@
                   <input type="checkbox" onchange="toggleStrikethrough(this)">
                   <span class="checkbox"></span>
                   <span class="d-flex align-items-center">
-                    <span class="ingredient-quantity mr-1" data-original-quantity="{{ ingredient.quantity }}">{{ ingredient.quantity }}</span>
-                    <span class="ingredient-unit  mr-1">{{ ingredient.unit }}</span>
-                    <span class="ingredient-name  mr-1">{{ ingredient.name }}</span>
+                    <span class="ingredient-quantity mr-1" data-original-quantity="{{ ingredient.quantity }}">{{ ingredient.quantity|format_quantity }}</span>
+                    <span class="ingredient-unit mr-1">{{ ingredient.unit }}</span>
+                    <span class="ingredient-name mr-1">{{ ingredient.name }}</span>
                   </span>
                 </label>
               </div>
-
+    
               <!-- Add to Shopping List Button -->
               <button onclick="toggleShoppingList({{ recipe.id }}, '{{ ingredient.name }}', this)" class="btn btn-info add-to-list"><i class="bi bi-cart"></i></button>
             </li>
@@ -108,6 +109,7 @@
         </div>
       </section>
     </aside>
+    
 
     <!-- Section: Preparation -->
     <section class="col-md-6 py-4 pl-5">
@@ -226,31 +228,37 @@
       });
     });
 
-  function updateIngredients() {
-    const originalServings = parseInt(document.getElementById('original-servings').value);
-    const newServings = parseInt(document.getElementById('new-servings').value);
-    const scale = newServings / originalServings;
-
-    document.querySelectorAll('.ingredient-quantity').forEach(function(item) {
+    function updateIngredients() {
+      const originalServings = parseInt(document.getElementById('original-servings').value);
+      const newServings = parseInt(document.getElementById('new-servings').value);
+    
+      if (isNaN(originalServings) || isNaN(newServings) || originalServings <= 0 || newServings <= 0) {
+        alert('Please enter valid servings.');
+        return;
+      }
+    
+      const scale = newServings / originalServings;
+    
+      document.querySelectorAll('.ingredient-quantity').forEach(function(item) {
         const originalQuantity = parseFloat(item.dataset.originalQuantity.replace(',', '.'));
+        
         if (!isNaN(originalQuantity)) {
-            // Két tizedesjegyig kerekítjük, majd eltávolítjuk a fölösleges nullákat
-            let scaledQuantity = (originalQuantity * scale).toFixed(2);
-
-            // Ha .00-ra végződik, akkor teljesen elhagyjuk a tizedesjegyeket
-            if (scaledQuantity.endsWith('.00')) {
-                scaledQuantity = parseInt(scaledQuantity, 10).toString();
-            } else if (scaledQuantity.endsWith('0')) {
-                // Ha csak egy 0 van a végén, akkor azt is levágjuk
-                scaledQuantity = scaledQuantity.slice(0, -1);
-            }
-
-            item.textContent = scaledQuantity;
+          // Scale the quantity and format it
+          let scaledQuantity = (originalQuantity * scale).toFixed(2);
+    
+          // Remove unnecessary zeros
+          if (scaledQuantity.endsWith('.00')) {
+            scaledQuantity = parseInt(scaledQuantity, 10).toString();
+          } else if (scaledQuantity.endsWith('0')) {
+            scaledQuantity = scaledQuantity.slice(0, -1);
+          }
+    
+          item.textContent = scaledQuantity;
         } else {
-            item.textContent = "Error";
+          item.textContent = "Error";
         }
-    });
-}
+      });
+    }
 
 
     

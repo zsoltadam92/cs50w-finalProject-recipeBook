@@ -54,8 +54,9 @@ class CommentForm(forms.ModelForm):
 
 
 class FridgeForm(forms.Form):
-    ingredient_1 = forms.CharField(required=False,max_length = 100)
-    ingredient_2 = forms.CharField(required=False,max_length = 100)
-    ingredient_3 = forms.CharField(required=False,max_length = 100)
-    ingredient_4 = forms.CharField(required=False,max_length = 100)
-    ingredient_5 = forms.CharField(required=False,max_length = 100)
+    ingredient_1 = forms.CharField(required=True,max_length = 100, widget=forms.TextInput(attrs={"class": "form-control"}))
+    ingredient_2 = forms.CharField(required=False,max_length = 100, widget=forms.TextInput(attrs={"class": "form-control"}))
+    ingredient_3 = forms.CharField(required=False,max_length = 100, widget=forms.TextInput(attrs={"class": "form-control"}))
+    ingredient_4 = forms.CharField(required=False,max_length = 100, widget=forms.TextInput(attrs={"class": "form-control"}))
+    ingredient_5 = forms.CharField(required=False,max_length = 100, widget=forms.TextInput(attrs={"class": "form-control"}))
+    ingredient_6 = forms.CharField(required=False,max_length = 100, widget=forms.TextInput(attrs={"class": "form-control"}))

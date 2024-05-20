@@ -5,7 +5,7 @@
 <div class="row pb-5 mb-1">
   {% for recipe in object_list%}
   <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-    <div class="card shadow-sm border-2 rounded mb-4">
+    <div class="card recipe-card shadow-sm  mb-4">
       <div class="card-body p-0">
         <img
           class="w-100 card-img-top img-fluid"
@@ -20,7 +20,6 @@
             class="stretched-link"
           ></a>
           <div class="row ">
-              <!-- Első sor: Idő és adagok -->
               <div class="col-6 d-flex align-items-center justify-content-center">
                   <i class="bi bi-hourglass-split"></i>
                   <span class="ml-2">{{ recipe.preparation_time }} min</span>
@@ -30,7 +29,6 @@
                   <span class="ml-2">{{ recipe.serving }}</span>
               </div>
       
-              <!-- Második sor: Nehézség és értékelés -->
               <div class="col-6 d-flex align-items-center justify-content-center">
                   <i class="bi bi-speedometer2"></i>
                   <span class="ml-2">{{ recipe.difficulty }}</span>

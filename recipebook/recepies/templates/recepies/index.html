@@ -1,6 +1,6 @@
-{% extends "recepies/layout.html" %} {% block content %}
-
-<h2 class="pl-5 mb-4">Recipes</h2>
+{% extends "recepies/layout.html" %} 
+{% block body_class %}recipes-background{% endblock %}
+{% block content %}
 
 {% include "recepies/recipe_cards.html" with object_list=recipes %}
 {% include "recepies/pagination.html" with object_list=recipes %}

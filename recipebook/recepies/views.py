@@ -71,7 +71,7 @@ def logout_view(request):
 def index(request):
     categories = Category.objects.all()
     recipes = Recipe.objects.all().order_by('created_at')
-    paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=12)
+    paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=10)
 
     return render(request, 'recepies/index.html', {
         'categories': categories,
@@ -130,6 +130,10 @@ def edit_recipe(request, recipe_id):
             ingredients_data = parse_ingredients(raw_ingredients)
             for quantity, unit, name in ingredients_data:
                 ingredient, created = Ingredient.objects.get_or_create(name=name.strip(), defaults={'quantity': quantity, 'unit': unit})
+                if not created:
+                    ingredient.quantity = quantity
+                    ingredient.unit = unit
+                    ingredient.save()
                 updated_recipe.ingredients.add(ingredient)
             updated_recipe.save()
             form.save_m2m() 
@@ -322,7 +326,12 @@ def list_favorites(request):
 def your_fridge(request):
     categories = Category.objects.all()
     fridge_ingredients = []
-    matching_recipes = []
+    matching_recipes = None
+    paginated_recipes = None
+    page_range = None
+    last_two_pages = None
+    submitted = request.POST.get('submitted', False)
+
 
     if request.method == "POST":
         fridgeForm = FridgeForm(request.POST)
@@ -332,27 +341,36 @@ def your_fridge(request):
             ingredient_3 = fridgeForm.cleaned_data['ingredient_3']
             ingredient_4 = fridgeForm.cleaned_data['ingredient_4']
             ingredient_5 = fridgeForm.cleaned_data['ingredient_5']
+            ingredient_6 = fridgeForm.cleaned_data['ingredient_6']
 
-            fridge_ingredients = [ingredient_1, ingredient_2, ingredient_3, ingredient_4, ingredient_5]
+            fridge_ingredients = [ingredient_1, ingredient_2, ingredient_3, ingredient_4, ingredient_5, ingredient_6]
             
             # Filter recipes that contain any of the ingredients listed in the fridge
             queries = [Q(raw_ingredients__icontains=ingredient) for ingredient in fridge_ingredients if ingredient]
-            print(queries)
-            query = queries.pop()
-            for item in queries:
-                query |= item
-                
+            if queries:
+                query = queries.pop()
+                for item in queries:
+                    query |= item
 
-            matching_recipes = Recipe.objects.filter(query).distinct()
+                matching_recipes = Recipe.objects.filter(query).distinct()
+                paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, matching_recipes, per_page=12)
+            else:
+                matching_recipes = []
+
+            
+        fridgeForm = FridgeForm()
+
 
     else:
         fridgeForm = FridgeForm()
         
     context = {
         'fridgeForm': fridgeForm,
-        'matching_recipes': matching_recipes,
-        'categories': categories
-        
+        'matching_recipes': paginated_recipes,
+        'categories': categories,
+        'page_range': page_range,
+        'last_two_pages': last_two_pages,
+        'submitted': submitted,
     }
 
     return render(request, "recepies/your_fridge.html", context)
