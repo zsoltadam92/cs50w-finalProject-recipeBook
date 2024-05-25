@@ -1,5 +1,5 @@
-{% extends "recepies/layout.html" %} {% load multiply_percentage %} {% load extra_filters %} {% load format_quantity %}
-
+{% extends "recepies/layout.html" %} {% load multiply_percentage %} {% load extra_filters %} 
+{% load format_quantity %} 
 
 
 {% block content %}
@@ -10,7 +10,7 @@
 
     <!-- Section: Recipe Image -->
     <figure class="col-md-6 p-0">
-      <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}" class="img-fluid img-recipe" >
+      <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}" class="img-fluid img-recipe rounded" >
     </figure>
 
     <!-- Section: Recipe Info -->
@@ -36,14 +36,11 @@
 
         <!-- Favorite Button -->
         {% if user.is_authenticated and user != recipe.creator %}
-            <form method="post" action="{% url 'add_to_favorites' recipe.id %}">
-                {% csrf_token %}
-                {% if recipe in user_favorite_recipes %}
-                    <button type="submit" class="btn btn-danger"><i class="bi bi-heart-fill"></i></button>
-                {% else %}
-                    <button type="submit" class="btn btn-transparent favorite-btn"><i class="bi bi-heart"></i></button>
-                {% endif %}
-            </form>
+        <div>
+          <button id="favorite-btn" class="favorite-btn btn {% if recipe in user_favorite_recipes %}btn-danger{% else %}btn-transparent{% endif %}" onclick="toggleFavorite({{ recipe.id }})">
+            <i class="bi {% if recipe in user_favorite_recipes %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+          </button>
+        </div>
         {% endif %}
       </header>
 
@@ -51,16 +48,16 @@
       <!-- Recipe Metadata -->
       <p class="mb-4"><strong>{{ recipe.creator }}</strong> - {{ recipe.created_at|date:"Y-m-d" }}</p>
       <div class="d-flex justify-content-center align-items-center p-2 recipe-metadata-container">
-          <!-- Preparation Time -->
-          <div class="mr-4">
-              <i class="bi bi-hourglass-split"></i>
-              <span>{{ recipe.preparation_time }} min</span>
-          </div>
-          <!-- Serving Size -->
-          <div class="mr-4">
-              <i class="bi bi-people-fill"></i>
-              <span>{{ recipe.serving }} Bowls</span>
-          </div>
+        <!-- Serving Size -->
+        <div class="mr-4">
+          <i class="bi bi-people-fill"></i>
+          <span>{{ recipe.serving }} Bowls</span>
+        </div>
+        <!-- Preparation Time -->
+        <div class="mr-4">
+            <i class="bi bi-hourglass-split"></i>
+            <span>{{ recipe.preparation_time }} min</span>
+        </div>
           <!-- Difficulty Level -->
           <div class="mr-4">
               <i class="bi bi-speedometer2"></i>
@@ -102,7 +99,7 @@
               </div>
     
               <!-- Add to Shopping List Button -->
-              <button onclick="toggleShoppingList({{ recipe.id }}, '{{ ingredient.name }}', this)" class="btn btn-info add-to-list"><i class="bi bi-cart"></i></button>
+              <button onclick="toggleShoppingList({{ recipe.id }}, '{{ ingredient.name }}', this)" class="btn btn-info add-to-list"><i class="bi bi-cart4"></i></button>
             </li>
             {% endfor %}
           </ul>
@@ -119,8 +116,10 @@
       {% endfor %}
     </section>
 
+
     <!-- Section: Ratings -->
     <aside class="col-md-6 py-4">
+      <section id="scroll-bottom"></section>
       <section id="ratings-section">
         {% if already_rated %}
         <p class="text-center bg-info ml-auto mr-auto p-2 rounded rating-alert" >You have already rated this recipe.</p>
@@ -133,7 +132,7 @@
             <i class="bi bi-arrow-down" id="animated-icon"></i>
           </div>
         </div>
-        <form method="post" action="{% url 'recipe_details' recipe.id %}" class="text-center mb-4">
+        <form  method="post" action="{% url 'recipe_details' recipe.id %}" class="text-center mb-4">
           {% csrf_token %}
           <div class="rating">
             {% for choice in form.ratings.field.choices %}
@@ -148,7 +147,7 @@
       </section>
 
       <!-- Ratings Summary Chart -->
-      <section class="d-flex justify-content-center mb-4">
+      <section id="rating-summary" class="d-flex justify-content-center mb-4">
         <div class="d-flex flex-column justify-content-center align-items-center">
           <div class="rating-summary-container">
             <h2 class="mb-0">{{ recipe.average_rating|floatformat:1 }} <span class="star-orange rating-summary-star">&#9733;</span></h2>
@@ -189,7 +188,7 @@
     </section>
 
     <!-- Comments List -->
-    <section class="col-8 d-flex flex-column mr-auto ml-auto mb-4">
+    <section id="comments" class="col-8 d-flex flex-column mr-auto ml-auto mb-4">
       <h3 class="mt-2 mb-3 text-center">Comments</h3>
       <div class="overflow-auto comment-panel" >
         {% for comment in comments %}
@@ -218,6 +217,16 @@
 
 <script>
 
+  document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('submitted')) {
+        document.getElementById('scroll-bottom').scrollIntoView({
+            behavior: 'smooth'
+        });
+    }
+});
+
+
    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function (e) {
         e.preventDefault();
@@ -227,6 +236,30 @@
         });
       });
     });
+
+    function toggleFavorite(recipeId) {
+      const csrfToken = getCookie('csrftoken');
+      fetch(`{% url 'add_to_favorites' recipe.id %}`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify({})
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              const btn = document.getElementById('favorite-btn');
+              const icon = btn.querySelector('i');
+              btn.classList.toggle('btn-transparent');
+              btn.classList.toggle('btn-danger');
+              icon.classList.toggle('bi-heart');
+              icon.classList.toggle('bi-heart-fill');
+          }
+      })
+      .catch(error => console.error('Error:', error));
+  }
 
     function updateIngredients() {
       const originalServings = parseInt(document.getElementById('original-servings').value);
@@ -308,9 +341,8 @@ function toggleShoppingList(recipeId, ingredientName, button) {
   .then(response => response.json())
   .then(data => {
       if (data.status === 'success') {
-          // Sikeres hozzáadás vagy törlés esetén váltás az ikon között
           if (isInList) {
-              button.innerHTML = '<i class="bi bi-cart"></i>';
+              button.innerHTML = '<i class="bi bi-cart4"></i>';
               button.classList.remove("btn-success")
               button.classList.add("btn-info")
             } else {
@@ -318,6 +350,12 @@ function toggleShoppingList(recipeId, ingredientName, button) {
               button.classList.remove("btn-info")
               button.classList.add("btn-success")
           }
+
+           // Update the cart item count
+          const cartCountElement = document.querySelector('.nav-item .badge');
+            if (cartCountElement) {
+                cartCountElement.textContent = data.shopping_list_items_count;
+            }
       } else {
           alert(data.message);
       }

@@ -1,7 +1,7 @@
 {% extends "recepies/layout.html" %} 
 {% block body_class %}recipes-background{% endblock %}
 {% block content %}
-<h2 class="mb-4">Search result(s): "{{ query }}"</h2>
+<h2 class="search-info p-2 mb-4 mr-auto ml-auto text-center text-light bg-dark">Search result(s): "{{ query }}"</h2>
 
 
 {% include "recepies/recipe_cards.html" with object_list=recipes %}

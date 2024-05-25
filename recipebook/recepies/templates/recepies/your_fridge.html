@@ -42,7 +42,7 @@
 <h3 class="fridge-recipe mt-4 ml-auto mr-auto  mb-4 p-2 text-center text-light bg-dark">Recipes</h3>
 <section id="recipes-section">
   {% if matching_recipes is None %}
-      <h3 class="text-light">No recipes</h3>
+      <h3 class="text-light text-center">No recipes</h3>
   {% elif matching_recipes %}
       {% include "recepies/recipe_cards.html" with object_list=matching_recipes %}
       {% include "recepies/pagination.html" with object_list=matching_recipes %}

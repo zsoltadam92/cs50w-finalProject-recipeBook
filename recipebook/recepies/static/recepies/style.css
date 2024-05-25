@@ -1,6 +1,6 @@
 
 body {
-    font-family: 'Poppins', sans-serif;
+    font-family: "Roboto", sans-serif;
     background-color: #fbfbfb;
     color: #333;    
 }
@@ -57,7 +57,7 @@ body {
 
 /* Recipe Metadata */
 .recipe-metadata-container {
-    box-shadow: 0px 0px 5px 3px #3D47FF;
+    box-shadow: 0px 0px 3px 2px #3D47FF;
     background-color: #fff;
     border-radius: 5px;
 }
@@ -243,7 +243,7 @@ body {
 .add-recipe-background {
     background-image: url('../recepies/food-2879265_1280.jpg');
     background-size: cover;
-    background-position: center;
+    background-position: 10% 20%;
     background-repeat: no-repeat;
     min-height: 100vh;
   }
@@ -345,7 +345,7 @@ body {
     transform: translateY(-5px);
 }
 
-.fridge-recipe {
+.fridge-recipe, .category-title {
     width: 20%; 
     border-radius: 10px
 }
@@ -366,4 +366,150 @@ body {
 
 .recipe-card:hover {
     transform: scale(1.05);
+}
+
+
+
+/* shopping_list.html------------------ */
+
+.shopping-container {
+
+}
+
+.exotic-style {
+    font-family: "Roboto", sans-serif;
+    color: #2c3e50;
+    min-height: 100vh;
+    margin-bottom: 20px;
+}
+
+#shoppingList {
+    list-style: none;
+    padding: 1rem;
+    width: 100%;
+    max-width: 600px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #f0e6d6, #c3b8a6);
+    margin: 2rem auto ;
+}
+
+#shoppingList li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ccc;
+    background-color: rgba(255, 255, 255, 0.9);
+    transition: background-color 0.3s;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+#shoppingList li:last-child {
+    border-bottom: none;
+}
+
+#shoppingList li:hover {
+    background: rgba(248, 237, 237, 0.856);
+
+}
+
+#shoppingList input[type="checkbox"] {
+    margin-right: 15px;
+    width: 60px;
+    height: 30px;
+    cursor: pointer;
+}
+
+#shoppingList label {
+    flex: 1;
+    font-size: 1rem;
+    margin: 0;
+    cursor: pointer;
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+
+
+/* categories.html---------------- */
+.no-recipes {
+    font-size: 3rem;
+    color:#2c3e50;
+    text-align: center;
+}
+
+
+
+/* login.html-------------------- */
+.login-body {
+    background: linear-gradient(135deg, #6a1b9a, #8e24aa);
+    height: 100vh;
+   
+}
+
+.login-section {
+    height: 90vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-container {
+    display: flex;
+    max-width: 50rem;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    height: 70vh;
+}
+
+.login-card {
+    border: none;
+}
+
+.login-image {
+    width: 50%;
+    background: url('../recepies/Colorful_book.webp') no-repeat center center;
+    background-size: cover;
+}
+
+.login-form {
+    width: 50%;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.card-header, .card-footer {
+    background: none;
+    border: none;
+}
+
+
+
+/* search.html----------------- */
+
+.search-info {
+    width: 30%;
+    border-radius: 10px;
 }

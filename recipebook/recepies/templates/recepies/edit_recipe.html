@@ -1,21 +1,77 @@
 {% extends "recepies/layout.html" %}
-
+{% block body_class %}add-recipe-background{% endblock %}
 {% block content %}
-  <div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-6 col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                  <h5>Edit Recipe</h5>
-                  <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit" class="btn btn-primary">Update</button>
-                  </form>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="container mt-5">
+  <div class="row justify-content-center">
+      <div class="col-lg-8 col-md-8">
+          <div class="card new_recipe_card shadow-sm mb-5">
+              <div class="card-body">
+                  <h5 class="card-title text-center mb-4">Edit Recipe</h5>
+                  <div class="form-wrapper">
+                      <form method="post" enctype="multipart/form-data">
+                          {% csrf_token %}
+                          <div class="form-group">
+                              {{ form.title.label_tag }}
+                              {{ form.title }}
+                          </div>
+                          
+                          <div class="form-row">
+                              <div class="form-group col-md-4">
+                                  {{ form.serving.label_tag }}
+                                  {{ form.serving }}
+                              </div>
+                              <div class="form-group col-md-4">
+                                  {{ form.preparation_time.label_tag }}
+                                  {{ form.preparation_time }}
+                              </div>
+                              <div class="form-group col-md-4">
+                                  <div class="d-flex flex-column">
+                                      {{ form.difficulty.label_tag }}
+                                      {{ form.difficulty }}
+                                  </div>
+                              </div>
+                          </div>
+                          
+                          <div class="form-group">
+                              {{ form.raw_ingredients.label_tag }}
+                              {{ form.raw_ingredients }}
+                          </div>
+                          
+                          <div class="form-group">
+                              {{ form.preparation.label_tag }}
+                              {{ form.preparation }}
+                          </div>
+                          
+                          <div class="form-group mb-4">
+                              {{ form.image.label_tag }}
+                              <div>
+                                  {% if form.image.value %}
+                                      <img src="{{ form.image.value.url }}" alt="Current Image" class="img-fluid mb-2" style="max-height: 200px;">
+                                  {% endif %}
+                                  {{ form.image }}
+                              </div>
+                          </div>
+                  
+                          <div class="form-group mb-4">
+                              {{ form.categories.label_tag }}
+                              <div class="form-inline">
+                                  {% for checkbox in form.categories %}
+                                      <div class="form-check form-check-inline">
+                                          {{ checkbox }}
+                                          {{ checkbox.label_tag }}
+                                      </div>
+                                  {% endfor %}
+                              </div>
+                          </div>
+                                          
+                          <button type="submit" class="btn btn-primary submit-btn mt-3">Update Recipe</button>
+                      </form>
+                  </div>
+              </div>
+          </div>
+      </div>
   </div>
+</div>
+
 
 {% endblock %}

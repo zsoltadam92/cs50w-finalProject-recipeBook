@@ -1,66 +1,76 @@
-<!-- shopping_list_view.html -->
-
 {% extends "recepies/layout.html" %}
+{% load format_quantity %}
+{% block body_class %}shopping-list-background{% endblock %}
 {% block content %}
-<h2>Bevásárlólista</h2>
 
-<ul id="shoppingList">
-  {% for item in shopping_list.shoppinglistitem_set.all %}
-  <li id="item-{{item.id}}">
-      <input type="checkbox"  onchange="toggleStrikethrough(this);">
-      <span>
-        {{ item.ingredient.quantity }} {{ item.ingredient.unit }} {{ item.ingredient.name }} 
-      </span>
+<div class"shopping-container">
+  <h2 class="mb-4 text-center">Shopping List</h2>
+  
+  <section class="exotic-style">
+    <ul id="shoppingList" class="mb-4">
+        {% for item in shopping_list.shoppinglistitem_set.all %}
+        <li id="item-{{ item.id }}">
+            <input id="item-{{ item.id }}-0" type="checkbox" onchange="toggleStrikethrough(this);">
+            <label for="item-{{ item.id }}-0">
+                {{ item.ingredient.quantity|format_quantity }} {{ item.ingredient.unit }} {{ item.ingredient.name }}
+            </label>
+            <button type="button" class="btn btn-danger" onclick="deleteListItem({{ item.id }})"><i class="bi bi-trash3"></i></button>
+        </li>
+        {% empty %}
+        <li class="justify-content-center"> The list is empty</li>
+        {% endfor %}
 
-      <button type="button" class="btn btn-danger" onclick="deleteListItem({{ item.id }})">Delete</button>
-  </li>
-  {% empty %}
-  <p>Nincsenek hozzávalók a kosárban.</p>
-  {% endfor %}
-</ul>
+    </ul>
+  </section>
+</div>
+
 
 <script>
-
-  function toggleClass(element, className, condition) {
-    condition ? element.classList.add(className) : element.classList.remove(className);
-};
-
-function toggleStrikethrough(checkbox) {
-    const textElement = checkbox.nextElementSibling;
-    toggleClass(textElement, 'strikethrough', checkbox.checked);
+  function toggleStrikethrough(checkbox) {
+    const listItem = checkbox.nextElementSibling;
+    if (checkbox.checked) {
+        listItem.style.textDecoration = 'line-through';
+        listItem.style.color = '#999';
+    } else {
+        listItem.style.textDecoration = 'none';
+        listItem.style.color = '#333';
+    }
 }
+
   
   
-  function deleteListItem(itemId) {
-    fetch(`/delete-list-item/${itemId}/`, {
+function deleteListItem(itemId) {
+  fetch(`/delete-list-item/${itemId}/`, {
       method: 'POST',
       headers: {
-        'X-CSRFToken': getCookie('csrftoken'),
-        'Content-Type': 'application/json'
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Content-Type': 'application/json'
       }
-    })
-    .then(response => {
-      if (response.ok) {
-        document.getElementById(`item-${itemId}`).remove(); 
-        
-        updateEmptyMassage();
-        } else {
+  })
+  .then(response => response.json())
+  .then(data => {
+      if (data.status === 'success') {
+          document.getElementById(`item-${itemId}`).remove();
+          updateEmptyMessage();
+
+          // Update the cart item count
+          const cartCountElement = document.querySelector('.nav-item .badge');
+          if (cartCountElement) {
+              cartCountElement.textContent = data.shopping_list_items_count;
+          }
+      } else {
           alert('Hiba történt a törlés során.');
-        }
-      })
+      }
+  })
   .catch(error => console.error('Hiba:', error));
 }
 
-function updateEmptyMassage() {
-  const shoppingList = document.getElementById("shoppingList")
-  const items = shoppingList.querySelectorAll("li")
-
-  if ( items.length === 0) {
-    shoppingList.innerHTML = '<p>Nincsenek hozzávalók a kosárban.</p>';
-
+function updateEmptyMessage() {
+  const list = document.getElementById('shoppingList');
+  if (list.children.length === 0) {
+      list.innerHTML = '<li class="justify-content-center"> The list is empty</li>';
   }
 }
-
 
 function getCookie(name) {
   let cookieValue = null;
@@ -68,7 +78,6 @@ function getCookie(name) {
     const cookies = document.cookie.split(';');
       for (let i = 0; i < cookies.length; i++) {
           const cookie = cookies[i].trim();
-          // Does this cookie string begin with the name we want?
           if (cookie.substring(0, name.length + 1) === (name + '=')) {
             cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
               break;

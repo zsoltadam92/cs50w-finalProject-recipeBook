@@ -1,4 +1,5 @@
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .models import Category, ShoppingList
 
 def paginate_with_page_range(request, queryset, per_page):
     """
@@ -33,3 +34,17 @@ def paginate_with_page_range(request, queryset, per_page):
         last_two_pages = range(1, last_page + 1)
 
     return paginated_queryset, page_range, last_two_pages
+
+
+def get_categories_and_shopping_list_count(user):
+    categories = Category.objects.all()
+    shopping_list_items_count = 0
+
+    if user.is_authenticated:
+        try:
+            shopping_list = ShoppingList.objects.get(user=user)
+            shopping_list_items_count = shopping_list.ingredients.count()
+        except ShoppingList.DoesNotExist:
+            shopping_list_items_count = 0
+
+    return categories, shopping_list_items_count

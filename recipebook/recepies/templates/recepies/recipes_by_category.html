@@ -2,7 +2,7 @@
 {% block body_class %}recipes-background{% endblock %}
 {% block content %}
 
-<h2 class="mb-4 text-center">{{ category }}</h2>
+<h2 class="category-title p-2 mb-4 mr-auto ml-auto text-center text-light bg-dark">{{ category }}</h2>
 
 {% include "recepies/recipe_cards.html" with object_list=recipes %}
 {% include "recepies/pagination.html" with object_list=recipes %}

@@ -2,7 +2,7 @@
 {% block body_class %}recipes-background{% endblock %}
 {% block content %}
 
-<h2 class="pl-5 mb-4">Favorites</h2>
+<h2 class="category-title  mt-4 ml-auto mr-auto  mb-4 p-2 text-center text-light bg-dark">Favorites</h2>
 
 {% include "recepies/recipe_cards.html" with object_list=recipes %}
 {% include "recepies/pagination.html" with object_list=recipes %}

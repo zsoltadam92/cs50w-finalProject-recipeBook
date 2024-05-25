@@ -14,8 +14,10 @@ from django.http import JsonResponse
 from .models import Recipe, ShoppingList, ShoppingListItem, Category, Ingredient, Rating, Favorite, Comment
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q
-from .utils import paginate_with_page_range
+from .utils import paginate_with_page_range, get_categories_and_shopping_list_count
 import json
+
+
 
 
 def register(request):
@@ -69,20 +71,22 @@ def logout_view(request):
     return HttpResponseRedirect(reverse("index"))
 
 def index(request):
-    categories = Category.objects.all()
-    recipes = Recipe.objects.all().order_by('created_at')
-    paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=10)
+    categories, shopping_list_items_count = get_categories_and_shopping_list_count(request.user)
+    recipes = Recipe.objects.all().order_by('-created_at')
+    paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=12)
 
     return render(request, 'recepies/index.html', {
         'categories': categories,
         'recipes': paginated_recipes,
         'page_range': page_range,
         'last_two_pages': last_two_pages,
+        'shopping_list_items_count': shopping_list_items_count,
+        'shopping_list_items_count': shopping_list_items_count,
     })
 
 
 def recipe_add(request):
-    categories = Category.objects.all()
+    categories, shopping_list_items_count = get_categories_and_shopping_list_count(request.user)
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES)
         if form.is_valid():
@@ -99,26 +103,39 @@ def recipe_add(request):
             return redirect('index')
     else:
         form = RecipeForm()
-    return render(request, 'recepies/recipe_form.html', {'form': form, 'categories': categories,})
+    return render(request, 'recepies/recipe_form.html', {
+        'form': form, 'categories': categories,
+        'shopping_list_items_count': shopping_list_items_count,
+    })
 
 
 def parse_ingredients(raw_ingredients):
     ingredients = []
     lines = raw_ingredients.split('\n')
     for line in lines:
-        parts = line.split(maxsplit=2) 
-        if len(parts) >= 3:
+        parts = line.split(maxsplit=2)
+        
+        # Ensure there are at least 2 parts (quantity and name)
+        if len(parts) >= 2:
             try:
-                quantity = float(Fraction(parts[0])) 
+                # Try to parse the first part as a quantity
+                quantity = float(Fraction(parts[0]))
+                if len(parts) == 2:
+                    # If there are only 2 parts, assume the unit is missing
+                    unit = ''
+                    name = parts[1]
+                else:
+                    # Otherwise, take the unit and name as normal
+                    unit = parts[1]
+                    name = parts[2]
+                ingredients.append((quantity, unit, name))
             except ValueError:
-                continue 
-            unit = parts[1]
-            name = parts[2]
-            ingredients.append((quantity, unit, name))
+                # If parsing the quantity fails, skip this line
+                continue
     return ingredients
 
 def edit_recipe(request, recipe_id):
-    categories = Category.objects.all()
+    categories, shopping_list_items_count = get_categories_and_shopping_list_count(request.user)
     recipe = get_object_or_404(Recipe, pk=recipe_id)
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES, instance=recipe)
@@ -140,11 +157,16 @@ def edit_recipe(request, recipe_id):
             return redirect('recipe_details', recipe_id=recipe_id)
     else:
         form = RecipeForm(instance=recipe)
-    return render(request, 'recepies/edit_recipe.html', {'form': form, 'recipe': recipe, 'categories': categories})
+    return render(request, 'recepies/edit_recipe.html', {
+        'form': form, 
+        'recipe': recipe, 
+        'categories': categories,
+        'shopping_list_items_count': shopping_list_items_count,
+    })
 
 
 def my_recipes(request):
-    categories = Category.objects.all()
+    categories, shopping_list_items_count = get_categories_and_shopping_list_count(request.user)
     recipes = Recipe.objects.filter(creator=request.user)
     paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=12)
 
@@ -153,11 +175,12 @@ def my_recipes(request):
         'recipes': paginated_recipes,
         'page_range': page_range,
         'last_two_pages': last_two_pages,
+        'shopping_list_items_count': shopping_list_items_count,
         })
 
 
 def recipe_details(request, recipe_id):
-    categories = Category.objects.all()
+    categories, shopping_list_items_count = get_categories_and_shopping_list_count(request.user)
     recipe = get_object_or_404(Recipe, pk=recipe_id)
     already_rated = False
     user_favorite_recipes = []
@@ -179,6 +202,7 @@ def recipe_details(request, recipe_id):
                 new_comment.save()
                 recipe.comments.add(new_comment)
                 recipe.save()
+                return HttpResponseRedirect(reverse('recipe_details', args=[recipe_id]) + '?submitted=true')
 
         elif "ratings" in request.POST:
             form = RatingForm(request.POST)
@@ -186,10 +210,7 @@ def recipe_details(request, recipe_id):
                 new_rating = form.cleaned_data['ratings']
                 Rating.objects.create(user=request.user, recipe=recipe, score=new_rating)
                 recipe.update_rating(request.user, int(new_rating))
-                return redirect('recipe_details', recipe_id=recipe_id)
-            else:
-                form = RatingForm() if request.user.is_authenticated else None
-
+                return HttpResponseRedirect(reverse('recipe_details', args=[recipe_id]) + '?submitted=true')
     context = {
         "recipe": recipe,
         "user_favorite_recipes": user_favorite_recipes,
@@ -199,7 +220,8 @@ def recipe_details(request, recipe_id):
         'already_rated': already_rated,
         "commentForm": CommentForm(),
         "comments": recipe.comments.all().order_by('-created_at'),
-        'categories': categories
+        'categories': categories,
+        'shopping_list_items_count': shopping_list_items_count,
     }
 
     return render(request, "recepies/recipe_details.html", context)
@@ -214,7 +236,7 @@ def get_ratings_info(recipe):
 
 
 def recipes_by_category(request, category):
-    categories = Category.objects.all()
+    categories, shopping_list_items_count = get_categories_and_shopping_list_count(request.user)
     category = Category.objects.get(title=category)
     recipes = Recipe.objects.filter(categories=category).order_by('title')  
     paginated_recipes, page_range, last_two_pages = paginate_with_page_range(request, recipes, per_page=12)
@@ -225,10 +247,11 @@ def recipes_by_category(request, category):
         'recipes': paginated_recipes,
         'page_range': page_range,
         'last_two_pages': last_two_pages,
+        'shopping_list_items_count': shopping_list_items_count,
         })
 
 def search(request):
-    categories = Category.objects.all()
+    categories, shopping_list_items_count = get_categories_and_shopping_list_count(request.user)
     query = request.GET.get('query', '')
     if query:
         recipes = Recipe.objects.filter(title__icontains=query)
@@ -243,6 +266,7 @@ def search(request):
         'recipes': paginated_recipes,
         'page_range': page_range,
         'last_two_pages': last_two_pages,
+        'shopping_list_items_count': shopping_list_items_count,
         })
 
 
@@ -270,16 +294,23 @@ def add_to_shopping_list(request, recipe_id, ingredient_name):
 
     
 def view_shopping_list(request):
-    categories = Category.objects.all()
+    categories, shopping_list_items_count = get_categories_and_shopping_list_count(request.user)
     shopping_list, created = ShoppingList.objects.get_or_create(user=request.user)
-    return render(request, 'recepies/shopping_list.html', {'shopping_list': shopping_list, 'categories': categories})
+    return render(request, 'recepies/shopping_list.html', {
+        'shopping_list': shopping_list, 
+        'categories': categories,
+        'shopping_list_items_count': shopping_list_items_count,
+    })
 
 def delete_list_item(request, item_id):
     if request.method == 'POST':
-        item = get_object_or_404(ShoppingListItem, pk=item_id)
-        item.delete()
-        return JsonResponse({'status': 'success'})
+        list_item = ShoppingListItem.objects.get(id=item_id)
+        shopping_list = list_item.shopping_list
+        list_item.delete()
+        shopping_list_items_count = shopping_list.ingredients.count()
+        return JsonResponse({'status': 'success', 'shopping_list_items_count': shopping_list_items_count})
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
 
 def remove_from_shopping_list(request, recipe_id, ingredient_name):
     if request.method == 'POST':
@@ -298,20 +329,19 @@ def remove_from_shopping_list(request, recipe_id, ingredient_name):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 def add_to_favorites(request, recipe_id):
-    recipe = get_object_or_404(Recipe, pk=recipe_id)
     if request.method == "POST":
+        recipe = get_object_or_404(Recipe, pk=recipe_id)
         favorite, created = Favorite.objects.get_or_create(user=request.user, recipe=recipe)
         if not created:
             favorite.delete()
-            messages.success(request, "Recipe removed from your favorites.")
+            return JsonResponse({"success": True, "favorited": False})
         else:
-            messages.success(request, "Recipe added to your favorites.")
-        return redirect('recipe_details', recipe_id=recipe_id)
-    return redirect('recipe_details', recipe_id=recipe_id)
+            return JsonResponse({"success": True, "favorited": True})
+    return JsonResponse({"success": False})
 
 
 def list_favorites(request):
-    categories = Category.objects.all()
+    categories, shopping_list_items_count = get_categories_and_shopping_list_count(request.user)
     favorites = Favorite.objects.filter(user=request.user).select_related('recipe')
     paginated_favorites, page_range, last_two_pages = paginate_with_page_range(request, [fav.recipe for fav in favorites], per_page=12)
 
@@ -320,11 +350,12 @@ def list_favorites(request):
         'recipes': paginated_favorites,
         'page_range': page_range,
         'last_two_pages': last_two_pages,
+        'shopping_list_items_count': shopping_list_items_count,
         })
 
 
 def your_fridge(request):
-    categories = Category.objects.all()
+    categories, shopping_list_items_count = get_categories_and_shopping_list_count(request.user)
     fridge_ingredients = []
     matching_recipes = None
     paginated_recipes = None
@@ -370,8 +401,32 @@ def your_fridge(request):
         'categories': categories,
         'page_range': page_range,
         'last_two_pages': last_two_pages,
+        'shopping_list_items_count': shopping_list_items_count,
         'submitted': submitted,
     }
 
     return render(request, "recepies/your_fridge.html", context)
 
+
+
+def add_to_shopping_list(request, recipe_id, ingredient_name):
+    user = request.user
+    try:
+        shopping_list, created = ShoppingList.objects.get_or_create(user=user)
+        ingredient = Ingredient.objects.get(name=ingredient_name)
+        shopping_list.ingredients.add(ingredient)
+        shopping_list_items_count = shopping_list.ingredients.count()
+        return JsonResponse({'status': 'success', 'shopping_list_items_count': shopping_list_items_count})
+    except Ingredient.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Ingredient does not exist'})
+
+def remove_from_shopping_list(request, recipe_id, ingredient_name):
+    user = request.user
+    try:
+        shopping_list = ShoppingList.objects.get(user=user)
+        ingredient = Ingredient.objects.get(name=ingredient_name)
+        shopping_list.ingredients.remove(ingredient)
+        shopping_list_items_count = shopping_list.ingredients.count()
+        return JsonResponse({'status': 'success', 'shopping_list_items_count': shopping_list_items_count})
+    except (Ingredient.DoesNotExist, ShoppingList.DoesNotExist):
+        return JsonResponse({'status': 'error', 'message': 'Ingredient or shopping list does not exist'})

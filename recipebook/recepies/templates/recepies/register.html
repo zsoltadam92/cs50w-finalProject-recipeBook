@@ -1,35 +1,44 @@
 {% extends "recepies/layout.html" %}
-
+{% block body_class %}login-body{% endblock %}
+{% block container_class %}login-section{% endblock %}
 {% block content %}
 
-<div class="card  bg-light mr-auto ml-auto mt-5" style="max-width: 25rem;">
-    <div class="card-header"><h2>Register</h2></div>
-        {% if message %}
-            <div class="alert alert-danger" role="alert">
-                <div>{{ message }}</div> 
+<div class="login-container">
+    <div class="login-image"></div>
+    <div class="login-form">
+        <div class="card bg-transparent text-light login-card">
+            <div class="card-header"><h2>Register</h2></div>
+            {% if message %}
+                <div class="alert alert-danger" role="alert">
+                    <div>{{ message }}</div>
+                </div>
+            {% endif %}
+            <div class="card-body">
+                <form action="{% url 'register' %}" method="post" >
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <input autofocus class="form-control" type="text" name="username" placeholder="Username">
+                    </div>
+                    <div class="form-group">
+                        <input class="form-control" type="email" name="email" placeholder="Email Address">
+                    </div>
+                    <div class="form-group">
+                        <input class="form-control" type="password" name="password" placeholder="Password">
+                    </div>
+                    <div class="form-group">
+                        <input class="form-control" type="password" name="confirmation" placeholder="Confirm Password">
+                    </div>
+                    <input class="btn btn-primary" type="submit" value="Register">
+                </form>
             </div>
-        {% endif %}
-    <div class="card-body">
-        <form action="{% url 'register' %}" method="post" >
-            {% csrf_token %}
-            <div class="form-group">
-                <input autofocus class="form-control" type="text" name="username" placeholder="Username">
+            <div class="card-footer">
+                Already have an account? <a href="{% url 'login' %}" class="text-warning">Log In here.</a>
             </div>
-            <div class="form-group">
-                <input class="form-control" type="email" name="email" placeholder="Email Address">
-            </div>
-            <div class="form-group">
-                <input class="form-control" type="password" name="password" placeholder="Password">
-            </div>
-            <div class="form-group">
-                <input class="form-control" type="password" name="confirmation" placeholder="Confirm Password">
-            </div>
-            <input class="btn btn-primary" type="submit" value="Register">
-        </form>
-    </div>
-    <div class="card-footer">
-        Already have an account? <a href="{% url 'login' %}">Log In here.</a>
+        </div>
     </div>
 </div>
+
+
+
 
 {% endblock %}
