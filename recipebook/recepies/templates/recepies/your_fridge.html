@@ -6,7 +6,7 @@
 <div class="d-flex justify-content-between align-items-center">
   
   <div class="fridge-container ">
-    <img src="{% static 'recepies/closed_fridge.jpg' %}" class="fridge-image" alt="Closed Fridge" id="fridgeImage" onclick="toggleFridge()" width="600px">
+    <img src="{% static 'recepies/images/closed_fridge.jpg' %}" class="fridge-image" alt="Closed Fridge" id="fridgeImage" onclick="toggleFridge()" width="600px">
     <div id="fridgeContent" class="fridge-content  " style="display:none;">
   
       <form method="post" id="fridgeForm" class="d-flex flex-column align-items-center justify-content-center">
@@ -51,35 +51,11 @@
   {% endif %}
 </section>
 
+
 <script>
-
-  
-  function toggleFridge() {
-    const image = document.getElementById("fridgeImage");
-    const content = document.getElementById("fridgeContent");
-    if (image.src.match("closed_fridge")) {
-        image.src = "{% static 'recepies/open_fridge.jpg' %}"; 
-        image.alt= "Open Fridge";
-        content.style.display = "block";
-      } else {
-        image.src = "{% static 'recepies/closed_fridge.jpg' %}";
-        image.alt= "Closed Fridge";
-        content.style.display = "none";
-    }
-}
-
-
-
-  document.addEventListener("DOMContentLoaded", function() {
-    {% if submitted %}
-    window.scrollTo({
-        top: document.getElementById('recipes-section').offsetTop,
-        behavior: 'smooth'
-    });
-    {% endif %}
-});
-
-
+  const submitted = {{ submitted|default_if_none:"false"|yesno:"true,false" }};
 </script>
+<script src="{% static 'recepies/js/your_fridge.js' %}"></script>
+
 
 {% endblock %}

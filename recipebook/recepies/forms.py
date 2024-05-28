@@ -21,8 +21,8 @@ class RecipeForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(RecipeForm, self).__init__(*args, **kwargs)
-        # A kategóriák querysetjének beállítása
         self.fields['categories'].queryset = Category.objects.all()
+        self.fields['image'].required = True
 
     def save(self, commit=True):
         instance = super(RecipeForm, self).save(commit=False)

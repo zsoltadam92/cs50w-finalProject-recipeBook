@@ -241,7 +241,7 @@ body {
 
 /* recipe_form.html---------- */
 .add-recipe-background {
-    background-image: url('../recepies/food-2879265_1280.jpg');
+    background-image: url('../recepies/images/food-2879265_1280.jpg');
     background-size: cover;
     background-position: 10% 20%;
     background-repeat: no-repeat;
@@ -288,7 +288,7 @@ body {
 
 /* your-fridge.html--------------- */
 .fridge-background {
-    background-image: url('../recepies/pizza-2589577_1280.jpg');
+    background-image: url('../recepies/images/pizza-2589577_1280.jpg');
     background-size: cover;
     background-position:top;
     background-repeat: no-repeat;
@@ -352,7 +352,7 @@ body {
 
 /* index.html------------- */
 .recipes-background {
-    background-image: url('../recepies/wood-6176923_1280.png');
+    background-image: url('../recepies/images/wood-6176923_1280.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -488,7 +488,7 @@ body {
 
 .login-image {
     width: 50%;
-    background: url('../recepies/Colorful_book.webp') no-repeat center center;
+    background: url('../recepies/images/Colorful_book.webp') no-repeat center center;
     background-size: cover;
 }
 

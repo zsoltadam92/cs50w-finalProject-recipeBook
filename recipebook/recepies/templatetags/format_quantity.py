@@ -9,6 +9,6 @@ def format_quantity(value):
         if value.is_integer():
             return int(value)
         else:
-            return value
+             return f"{value:.2f}"
     except ValueError:
         return value
