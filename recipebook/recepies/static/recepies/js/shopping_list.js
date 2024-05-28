@@ -28,10 +28,10 @@ window.deleteListItem = function(itemId) {
                 cartCountElement.textContent = data.shopping_list_items_count;
             }
         } else {
-            alert('Hiba történt a törlés során.');
+            alert('An error occurred during the deletion.');
         }
     })
-    .catch(error => console.error('Hiba:', error));
+    .catch(error => console.error('Error:', error));
 }
 
 

@@ -21,10 +21,6 @@ urlpatterns = [
     path('add-to-favorites/<int:recipe_id>/', views.add_to_favorites, name='add_to_favorites'),
     path('favorites/', views.list_favorites, name='favorites'),
     path('your_fridge/', views.your_fridge, name='your_fridge'),
-
-
-
-
 ] 
 
 if settings.DEBUG:
